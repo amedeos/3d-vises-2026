@@ -172,6 +172,8 @@ Tux in one colour still looks like Tux: his belly, eyes, beak and feet are raise
 
 Screw the stub into each hole. Pick the tightest one that turns smoothly all the way, and set `CLR_THREAD` in `src/tux_vise/params.py` to its clearance. The nut and every coupon hole come from the same function, so whatever fits on the coupon fits in the vise.
 
+On our MK4 with Prusament PETG and the 0.20 mm STRUCTURAL profile, the 2-dot hole was the best one, so the files you download already use it. With the same printer, filament and profile, you can probably skip the coupon.
+
 
 ### Assembly
 
