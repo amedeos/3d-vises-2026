@@ -9,8 +9,8 @@ Two Tux-themed holding tools for the Printables contest
 Both models share one code base.
 
 1. **Tux Clip:** a print-in-place flexure clip shaped like Tux. The flippers are the jaws.
-   Squeeze his shoulders and the flippers open. Sizes S, M and L, a desk version and a
-   flexure coupon.
+   Squeeze his shoulders and the flippers open. Sizes S, M and L, a desk version (Tux lies
+   on an ice floe and holds a card upright) and a flexure coupon. Done: see README.
 2. **Tux Vise:** a small desk vise. Tux's belly is the fixed jaw, a flipper is the moving
    jaw, a printed trapezoidal screw drives it and the knob is a fish. (Phase 3: not started.)
 
@@ -40,10 +40,13 @@ Both models share one code base.
 ```sh
 uv sync
 uv run pytest                              # all checks, both models
+uv run python -m tux_clip.model            # flexure numbers per size (opening, swing, force)
 uv run python -m tux_clip.export           # STLs -> out/stl/tux_clip, 3MF plates -> out/3mf/tux_clip
 uv run python -m tux_clip.slicer           # optional, PrusaSlicer CLI: times, checks, projects
 uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip (add --gif)
 ```
+
+- The full test suite takes about 40 s.
 
 ## Layout
 
@@ -59,7 +62,35 @@ uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip
 | `src/tux_clip/params.py` | **Single source of truth** for every Tux Clip size and clearance |
 | `src/tux_clip/model.py` | Clip parts per colour, desk version, coupon, flexure mechanics |
 | `src/tux_clip/export.py`, `render.py`, `slicer.py` | Entry points (`python -m tux_clip.<name>`) |
+| `tests/conftest.py` | `MODELS`: the model packages the tests run on. Each `<model>.export` provides `printable_parts()`, `colour_parts()`, `plates()`, `PLANNED_M600`, `THIN_FEATURES`, `GAPS`. |
 | `tests/` | pytest suite. Keep it green. |
+
+## Tux Clip mechanism (do not break it)
+
+- The clip prints **on its back**. Everything is 2.5D: one black profile extruded to
+  `T_BODY`, white and orange reliefs on top. Never add a feature that needs a different
+  height inside the black body.
+- Each flipper is a lever on a leaf flexure (`FLEX_LINES` lines wide). The mechanism lives
+  in a local frame (a, b): a runs down the jaw line, b points away from the body, the
+  origin is the virtual pivot (middle of the leaf). `Mechanism.plane` places it.
+- `_solve` picks the shortest leaf whose strain at full opening stays within
+  `PETG_SAFE_STRAIN` (half of 47 MPa / 1.5 GPa). A thicker leaf opens less, not more
+  strained. The stop (pad meets the shoulder face b = t/2) is computed from the same pose
+  (`_g_top`), so the leaf can never bend further.
+- `pose(m, theta)` moves the flipper like the end of a leaf bent into a circular arc.
+  Render, collision tests and the desk floe all use it: do not pose the flipper with a
+  plain rotation.
+- The body is cut by the swept area of the flipper (`sweep_local`), then the jaw strip,
+  the teeth and the shoulder stop are added back exactly (`body_extra_local`). That keeps
+  the head round and the stop face exact.
+- Comb teeth: `TOOTH_W = lines(2)`, side gap and tip gap 0.5 mm, overlap `PRELOAD`. The
+  overlap is the preload: at rest the jaw is "closed past zero".
+- The forces are small (well under 1 N on a thin card at the tip, see README). That is the
+  physics of a PETG leaf at a safe strain, not a bug. The coupon (2/3/4 line leaves) lets
+  the owner trade opening for grip.
+- Print time grows about 6.1 min + 1.46 min per cm3 of model (PrusaSlicer 2.9.6, flat
+  parts). `test_print_time_budget` uses this to keep every clip under 30 min. The L size is
+  75 mm with a 13 mm opening for that reason; 18 mm needs a 90 mm Tux (38 min).
 
 ## Layers and lines (0.4 mm nozzle, 0.2 mm layers)
 
@@ -103,7 +134,14 @@ uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip
   `--support-material --support-material-auto --dont-support-bridges`; the result must have
   no support extrusions.
 - `--printer-profile` needs a PrusaSlicer data folder with the Prusa vendor profiles
-  installed. On a machine without one, pass `--datadir` in `PRUSA_SLICER`.
+  installed (Configuration Wizard). **Without them the CLI does not fail: it slices with
+  its defaults** (a 200 x 200 mm bed, no filament density), drops parts outside that bed
+  and gives wrong times. `slicer.py` flags a bed that is not the MK4 one. Copying the
+  vendor `.ini` into a bare `--datadir` was not enough. What works: `PRUSA_CONFIG` pointing
+  to a full config (the `Metadata/Slic3r_PE.config` of a project 3MF made on a machine
+  with the profiles, without the `; ` prefixes), loaded with `--load`.
+- With colour changes, PrusaSlicer 2.9 writes `total filament used [g] = 0.00`.
+  `slicer.py` computes the grams from `filament used [cm3]` and `filament_density`.
 
 ## build123d gotchas
 
@@ -119,6 +157,12 @@ uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip
   The STL gets degenerate triangles there.
 - Part builders are cached (`functools.cache`). Never change a returned part in place.
   Transform it (`Pos(...) * part`) or combine it (`part & region`).
+- Where two curved shapes meet at a sharp angle (belly and feet, upper and lower beak), the
+  notch is narrower than a line. `tux.close_crevices` fills it (offset out and back in).
+- Do not check overhangs on a mesh: a curved vertical wall gets thin, tilted triangles.
+  `printability.overhangs` samples the exact face normals instead.
+- Shared edges between two colours (the white pad under each foot has the outline of the
+  foot) give tessellation slivers; the colour-stacking test allows 0.02 mm.
 
 ## Git
 
