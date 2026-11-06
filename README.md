@@ -96,6 +96,8 @@ Print `coupon_flexure.3mf` in one colour. It is a bar with three short flippers,
 | 2 | 3 lines (1.26 mm) | 3.1 mm | 1.00 N |
 | 3 | 4 lines (1.67 mm) | 2.1 mm | 2.32 N |
 
+The coupon also tests your printer: the flippers are free only thanks to 0.5 mm gaps that run the full height of the part. If a flipper comes out stuck (PETG strings, or a squashed first layer), widen `SLOT_MIN` and `TOOTH_GAP` in `src/tux_clip/params.py` before you print the clips.
+
 Squeeze each flipper and feel the difference. A thicker leaf grips harder but opens less, because every leaf stops at the same safe bend. The clips use 2 lines (1 dot). To change it, set `FLEX_LINES` in `src/tux_clip/params.py`: the model makes the leaf as long as it needs and opens as far as the leaf allows. The tests then tell you the new opening.
 
 

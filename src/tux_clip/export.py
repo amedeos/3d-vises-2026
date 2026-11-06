@@ -12,7 +12,6 @@ from pathlib import Path
 from build123d import Part
 
 from common.export import Change, Plates, centred, export_model, row
-from common.grid import layer_top
 
 from . import params as P
 from .model import (
@@ -26,8 +25,7 @@ from .model import (
 )
 
 MODEL = "tux_clip"
-M600_WHITE = layer_top(P.Z_WHITE)  # print_z of the first white layer
-M600_ORANGE = layer_top(P.Z_ORANGE)  # print_z of the first orange layer
+M600_WHITE, M600_ORANGE = P.M600_WHITE, P.M600_ORANGE  # defined in params.py
 CHANGES: list[Change] = [(M600_WHITE, "white"), (M600_ORANGE, "orange")]
 
 # Declared widths, checked by the tests: thin features must be whole lines (2 or more),
