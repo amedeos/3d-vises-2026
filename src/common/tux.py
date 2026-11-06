@@ -11,7 +11,7 @@ lies inside a white region.
 """
 
 from dataclasses import dataclass
-from functools import cache
+from functools import cache, cached_property
 
 from build123d import (
     Edge,
@@ -76,12 +76,12 @@ class TuxProfile:
     beak: Sketch  # orange (on a white pad of the same shape)
     feet: Sketch  # orange (on a white pad of the same shape)
 
-    @property
+    @cached_property
     def white(self) -> Sketch:
         """Everything printed white: belly, eyes, and the pads under the beak and feet."""
         return close_crevices(self.belly + self.eyes + self.beak + self.feet) - self.pupils
 
-    @property
+    @cached_property
     def orange(self) -> Sketch:
         return close_crevices(self.beak + self.feet)
 

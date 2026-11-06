@@ -6,7 +6,7 @@ For every plate in out/3mf it:
 1. slices the plate with the Prusa MK4 profiles and reports the print time and filament,
    and checks that the M600 is there exactly when needed and that nothing needs support
    (a second slice with automatic supports on must create no support at all);
-2. writes a PrusaSlicer project to out/3mf/projects/: the same plate plus the full
+2. writes a PrusaSlicer project to out/3mf/<model>/projects/: the same plate plus the full
    print configuration, so the MK4 settings and the colour change load with one click.
 
 PrusaSlicer writes its complete configuration at the end of every G-code file, in the
@@ -25,7 +25,6 @@ import re
 import shlex
 import shutil
 import subprocess
-import sys
 import tempfile
 import zipfile
 from pathlib import Path
@@ -146,8 +145,9 @@ def main(folder: Path, planned: dict[str, list[Change]], model: str) -> int:
             issues = []
             probe = Path(tmp) / f"{plate.stem}.supports.gcode"
             slice_plate(cmd, plate, probe, extra=tuple(AUTO_SUPPORT))
-            if summary(probe)["support_lines"]:
-                issues.append(f"needs support ({summary(probe)['support_lines']} extrusions)")
+            support = summary(probe)["support_lines"]
+            if support:
+                issues.append(f"needs support ({support} extrusions)")
             if sorted(stored) != expected:
                 issues.append(f"3MF stores M600 at {stored}, the design says {expected}")
             if info["m600"] != len(expected) or sorted(info["m600_z"]) != expected:

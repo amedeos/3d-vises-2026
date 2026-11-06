@@ -1,7 +1,8 @@
 """Optional: slice the Tux Clip plates with the PrusaSlicer CLI and write projects.
 
 Run `python -m tux_clip.export` first. See `common.slicer` for what it checks.
-Set PRUSA_SLICER if `prusa-slicer` is not on the PATH, or to add `--datadir <folder>`.
+Set PRUSA_SLICER if `prusa-slicer` is not on the PATH. If the Prusa MK4 profiles are not
+installed, set PRUSA_CONFIG to a full PrusaSlicer config (see AGENTS.md).
 """
 
 import sys
