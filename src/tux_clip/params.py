@@ -16,7 +16,8 @@ the flexure is the shoulder pad, below it is the jaw. Squeeze the two shoulders 
 each other and the flipper tips swing out. At rest the teeth of the flipper and of the
 body mesh like a comb, with their tips PRELOAD past each other, so the jaws hold even a
 thin card with some force. A stop between the shoulder pad and the body limits the
-swing, so the flexure never bends past PETG_SAFE_STRAIN.
+swing, so the flexure never bends past PETG_SAFE_STRAIN (model.py computes the real,
+uneven bend of the leaf, not a circular arc).
 
 Frames: x to the right, y up, feet on y=0, centre line x=0 (as in common.tux). Each
 mechanism lives in a local jaw frame (a, b): a runs along the jaw line, down and out,
@@ -30,11 +31,10 @@ from common.grid import FIRST_LAYER, LAYER, LINE_W, layer_top, layers, lines  # 
 # --- material: Prusament PETG technical data sheet v1.1 (16-02-2022), printed in XY -----
 PETG_E = 1500.0  # tensile modulus (MPa)
 PETG_E_FLEX = 1700.0  # flexural modulus (MPa): used for the flexure stiffness
-PETG_YIELD = 47.0  # tensile yield strength (MPa)
-# Allowed bending strain: half the linear-elastic yield strain (47 / 1500 = 3.1 %), so
-# 1.57 %. The data sheet's "elongation at yield" (5.1 %) includes non-linear stretching;
-# we stay in the linear range and keep a factor of 2 for repeated use.
-PETG_SAFE_STRAIN = 0.5 * PETG_YIELD / PETG_E
+PETG_YIELD_STRAIN = 0.051  # elongation at yield point, ISO 527-1 (5.1 % in XY and in Z)
+# Allowed peak bending strain in the leaf: half the elongation at yield, so 2.55 %. The
+# factor of 2 is for repeated use. It applies to the most bent point of the leaf.
+PETG_SAFE_STRAIN = 0.5 * PETG_YIELD_STRAIN
 
 # --- thickness and colours (print orientation: on the back) --------------------------
 T_BODY = layers(24)  # 4.8 mm of black: the flexure height
@@ -49,12 +49,13 @@ M600_WHITE = layer_top(Z_WHITE)
 M600_ORANGE = layer_top(Z_ORANGE)
 
 # --- sizes: Tux height and the jaw opening at the flipper tip ------------------------
-# L: an 18 mm opening needs a 90 mm Tux, and that takes 38 min. A 75 mm Tux stays under
-# 30 min, and there the flexure allows 13 mm with a useful jaw (about 17 mm long).
+# The openings are a little under the most each height allows, so the jaw keeps 7-9
+# teeth. L: 13 mm needs an 85 mm Tux (about 36 min) and 18 mm a 95 mm Tux (about 43 min);
+# a 75 mm Tux stays under 30 min and opens 11 mm.
 SIZES = {
-    "S": {"height": 50.0, "opening": 5.0},
-    "M": {"height": 65.0, "opening": 10.0},
-    "L": {"height": 75.0, "opening": 13.0},
+    "S": {"height": 50.0, "opening": 4.0},
+    "M": {"height": 65.0, "opening": 8.0},
+    "L": {"height": 75.0, "opening": 11.0},
 }
 
 # --- the flipper and its jaw (fractions of the height, or mm) -------------------------
@@ -76,6 +77,8 @@ TOOTH_D = PRELOAD + TIP_GAP  # how far a tooth sticks out of its jaw
 JAW_W = 2 * TOOTH_D - PRELOAD  # distance between the two jaw faces (tooth bases)
 BRIDGE = 1.6  # solid top of the flipper's jaw, where the flexure joins it
 SLOT_MIN = 0.5  # narrowest slot around the flexure (>= LINE_W)
+MIN_TEETH = 3  # the jaw keeps at least body, flipper, body tooth (a longer leaf = shorter jaw)
+STOP_MARGIN = 1.0  # the flat stop face reaches this far past the point the pad lands on
 
 # --- desk version: Tux lies on a flat ice floe ------------------------------------------
 DESK_SIZE = "M"

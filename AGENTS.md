@@ -46,7 +46,7 @@ uv run python -m tux_clip.slicer           # optional, PrusaSlicer CLI: times, c
 uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip (add --gif)
 ```
 
-- The full test suite takes about 40 s.
+- The full test suite takes about 30 s.
 
 ## Layout
 
@@ -73,24 +73,33 @@ uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip
 - Each flipper is a lever on a leaf flexure (`FLEX_LINES` lines wide). The mechanism lives
   in a local frame (a, b): a runs down the jaw line, b points away from the body, the
   origin is the virtual pivot (middle of the leaf). `Mechanism.plane` places it.
-- `_solve` picks the shortest leaf whose strain at full opening stays within
-  `PETG_SAFE_STRAIN` (half of 47 MPa / 1.5 GPa). A thicker leaf opens less, not more
-  strained. The stop (pad meets the shoulder face b = t/2) is computed from the same pose
-  (`_g_top`), so the leaf can never bend further.
-- `pose(m, theta)` moves the flipper like the end of a leaf bent into a circular arc.
-  Render, collision tests and the desk floe all use it: do not pose the flipper with a
-  plain rotation.
-- The body is cut by the swept area of the flipper (`sweep_local`), then the jaw strip,
-  the teeth and the shoulder stop are added back exactly (`body_extra_local`). That keeps
-  the head round and the stop face exact.
+- **The leaf is not a circular arc.** A force on the flipper bends it with a curvature
+  that is zero on the force's line and grows linearly away from it (`leaf_angle`). Two
+  loads matter (`LOADS`): "squeeze" (fingers on the pad top, and the stop at the same
+  place: a = a_pt) sets the stop and the opening; "jaw" (an object at the tip: a = a_tip)
+  sets the clamping force and can push the flipper to the stop too. The peak strain is
+  `t theta / 2L * (1 + L / 2|a_load|)`, at the end of the leaf farther from the load.
+  Treating the leaf as an arc overstated the opening by about 25 % (code review, Nov 2026).
+- `_solve` picks the shortest leaf whose peak strain at **both** stops stays within
+  `PETG_SAFE_STRAIN` (half the 5.1 % elongation at yield) and that still leaves
+  `MIN_TEETH` teeth on the jaw. A thicker leaf opens less, not more strained. The squeeze
+  stop (pad meets the shoulder face b = t/2) is computed from the same pose (`_g_top`),
+  the jaw stop from the same slot, so the leaf can never bend further.
+- `pose(m, theta, load)` moves the flipper with the end of the bent leaf. Render,
+  collision tests and the desk floe all use it: do not pose the flipper with a plain
+  rotation.
+- The body is cut by the area the flipper sweeps under both loads (`sweep_local`), then
+  the jaw strip, the teeth and the shoulder stop are added back exactly
+  (`body_extra_local`). That keeps the head round and the stop face exact. The stop face
+  reaches `STOP_MARGIN` past the point where the pad lands (`stop_contact`).
 - Comb teeth: `TOOTH_W = lines(2)`, side gap and tip gap 0.5 mm, overlap `PRELOAD`. The
   overlap is the preload: at rest the jaw is "closed past zero".
-- The forces are small (well under 1 N on a thin card at the tip, see README). That is the
+- The forces are small (0.04-0.15 N on a thin card at the tip, see README). That is the
   physics of a PETG leaf at a safe strain, not a bug. The coupon (2/3/4 line leaves) lets
   the owner trade opening for grip.
 - Print time grows about 6.1 min + 1.46 min per cm3 of model (PrusaSlicer 2.9.6, flat
   parts). `test_print_time_budget` uses this to keep every clip under 30 min. The L size is
-  75 mm with a 13 mm opening for that reason; 18 mm needs a 90 mm Tux (38 min).
+  75 mm with an 11 mm opening for that reason; 13 mm needs an 85 mm Tux (about 36 min).
 
 ## Layers and lines (0.4 mm nozzle, 0.2 mm layers)
 

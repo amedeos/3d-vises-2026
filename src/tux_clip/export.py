@@ -22,6 +22,7 @@ from .model import (
     make_clip,
     make_coupon,
     make_desk,
+    mechanism,
 )
 
 MODEL = "tux_clip"
@@ -34,7 +35,7 @@ THIN_FEATURES = {"flexure": P.FLEX_T, "tooth": P.TOOTH_W}
 GAPS = {"tooth side gap": P.TOOTH_GAP, "tooth tip gap": P.TIP_GAP, "slot": P.SLOT_MIN,
         **{f"leaf slot {n} lines": -leaf_slot_b(coupon_mechanism(n)) - P.lines(n) / 2
            for n in P.COUPON_LINES},
-        "leaf to jaw slot": P.JAW_W / 2 - P.FLEX_T / 2}
+        "leaf to jaw slot": min(-leaf_slot_b(mechanism(s)) - P.FLEX_T / 2 for s in P.SIZES)}
 
 
 def printable_parts() -> dict[str, Part]:

@@ -1,22 +1,28 @@
 """Tux Clip mechanics: opening, flexure strain, preload, clearances over the swing."""
 
-from math import pi
-
 import pytest
+from build123d import Pos, Rectangle
 
 from common.grid import LINE_W, layers, lines
 from common.tux import tux_profile
 from tux_clip import params as P
 from tux_clip.model import (
+    LOADS,
+    _both_sides,
     body_profile,
+    body_teeth_local,
     card_hold_margin,
     coupon_mechanism,
+    flipper_local,
     flipper_placed,
     leaf_local,
+    leaf_point,
     make_clip,
     mechanism,
-    moving_local,
-    _both_sides,
+    pose,
+    stop_contact,
+    stop_face_top,
+    teeth_positions,
 )
 
 SIZES = list(P.SIZES)
@@ -29,15 +35,46 @@ def test_jaw_opens_to_the_target(size):
 
 
 @pytest.mark.parametrize("size", SIZES)
-def test_flexure_strain_stays_safe(size):
-    """At the stop, the leaf bends no more than PETG_SAFE_STRAIN.
+@pytest.mark.parametrize("load", LOADS)
+def test_flexure_strain_stays_safe(size, load):
+    """At either stop, the most bent point of the leaf stays within PETG_SAFE_STRAIN.
 
-    Assumption (params.py): pure bending, eps = t * theta / (2 L), and an allowed strain of
-    half the linear-elastic yield strain of Prusament PETG (47 MPa / 1.5 GPa / 2 = 1.57 %).
+    Assumption (params.py): the curvature grows linearly away from the load line, and the
+    allowed strain is half the elongation at yield of Prusament PETG (5.1 % / 2 = 2.55 %).
     """
     m = mechanism(size)
-    assert m.strain(m.theta_stop) <= P.PETG_SAFE_STRAIN + 1e-9
-    assert P.PETG_SAFE_STRAIN == pytest.approx(0.0157, abs=1e-4)
+    assert m.strain(m.stop(load), load) <= P.PETG_SAFE_STRAIN + 1e-9
+    assert P.PETG_SAFE_STRAIN == pytest.approx(0.0255, abs=1e-4)
+
+
+@pytest.mark.parametrize("load", LOADS)
+def test_leaf_shape(load):
+    """The bent leaf keeps its length, turns its end by theta, and its curvature is zero on
+    the load line and largest at the far end (the strain formula relies on that)."""
+    m = mechanism("M")
+    theta, a_load = m.stop(load), m.load_line(load)
+    pts = [leaf_point(m.L, theta, a_load, -m.L / 2 + m.L * k / 400) for k in range(401)]
+    length = sum(((x1 - x0) ** 2 + (y1 - y0) ** 2) ** 0.5
+                 for (x0, y0), (x1, y1) in zip(pts, pts[1:]))
+    assert length == pytest.approx(m.L, rel=1e-4)
+    (xa, ya), (xb, yb) = pts[-2], pts[-1]
+    from math import atan2
+
+    assert atan2(yb - ya, xb - xa) == pytest.approx(theta, abs=2e-3)
+    # a circular arc of the same swing would give a smaller peak strain
+    assert m.strain(theta, load) > m.t * theta / (2 * m.L)
+
+
+@pytest.mark.parametrize("size", SIZES)
+@pytest.mark.parametrize("flex_lines", [2, 3, 4])
+def test_every_leaf_keeps_a_comb(size, flex_lines):
+    """Thicker leaves open less but keep a real comb: at least MIN_TEETH teeth, flipper
+    teeth included, so the preload is still there (README: change FLEX_LINES)."""
+    m = mechanism(size, flex_lines)
+    body, flipper = teeth_positions(m)
+    assert len(body) + len(flipper) >= P.MIN_TEETH and flipper
+    assert m.opening > 1.0
+    assert m.opening_at(0.0) == pytest.approx(-P.PRELOAD, abs=1e-9)
 
 
 @pytest.mark.parametrize("size", SIZES)
@@ -47,11 +84,11 @@ def test_jaws_close_with_a_positive_preload(size):
     m = mechanism(size)
     assert P.PRELOAD > 0
     assert m.opening_at(0.0) == pytest.approx(-P.PRELOAD, abs=1e-9)
-    # measured on the drawn teeth, not only on the parameters
-    from tux_clip.model import body_teeth_local, flipper_local
-
+    # measured on the drawn teeth, not only on the parameters: the flipper below its
+    # bridge is only the jaw and its teeth
     body_tip = body_teeth_local(m).bounding_box().max.Y
-    flipper_tip = min(f.bounding_box().min.Y for f in flipper_local(m).faces())
+    jaw_zone = Pos(m.a_tip, 0) * Rectangle(2 * (m.a_tip - m.L / 2 - P.BRIDGE) - 0.02, 40)
+    flipper_tip = (flipper_local(m) & jaw_zone).bounding_box().min.Y
     assert body_tip - flipper_tip == pytest.approx(P.PRELOAD, abs=1e-3)
     assert m.force(0.0) > 0
     assert m.force(0.3) > m.force(0.0)  # a photo gets more force than nothing
@@ -65,34 +102,45 @@ def test_flipper_is_free_at_rest(size):
     assert flipper.distance_to(body) >= LINE_W - 1e-3
 
 
-def _overlap(m, theta: float) -> float:
-    """Area where the swung leaf and flipper overlap the body (or each other), minus the
-    two designed joints of the leaf."""
+def _area(sketch) -> float:
+    return sketch.area if sketch is not None else 0.0
+
+
+def _overlap(m, theta: float, load: str) -> float:
+    """Area where the body, the swung leaf and the swung flipper overlap each other, minus
+    the designed joints (each leaf reaches 0.05 mm into the body and into the flipper)."""
     body = body_profile(m)
-    moving = _both_sides(m, moving_local(m, theta))
-    joints = 2 * 2 * 0.05 * m.t  # each leaf overlaps 0.05 mm into the body and the flipper
-    leaf = _both_sides(m, leaf_local(m, theta))
-    flipper_area = moving.area - leaf.area + joints / 2
-    return body.area + leaf.area + flipper_area - (body + moving).area - joints
+    leaf = _both_sides(m, leaf_local(m, theta, load))
+    flipper = _both_sides(m, pose(m, theta, load) * flipper_local(m))
+    joints = 4 * 0.05 * m.t
+    return _area(body & leaf) + _area(body & flipper) + _area(leaf & flipper) - joints
 
 
 @pytest.mark.parametrize("size", SIZES)
-def test_nothing_collides_over_the_swing(size):
+@pytest.mark.parametrize("load", LOADS)
+def test_nothing_collides_over_the_swing(size, load):
+    """From rest to the stop, under either load: the leaf, the flipper and the body never
+    overlap, and the flipper only touches the body at the stop."""
     m = mechanism(size)
-    for k in range(8):
-        theta = m.theta_stop * k / 8
-        assert _overlap(m, theta) < 0.05, f"{size}: overlap at {theta:.3f} rad"
-        if k:
-            assert flipper_placed(m, theta).distance_to(body_profile(m)) > 0.0
+    for k in range(9):
+        theta = m.stop(load) * k / 8
+        assert abs(_overlap(m, theta, load)) < 0.05, f"{size}: overlap at {theta:.3f} rad"
+        if 0 < k < 8:
+            assert flipper_placed(m, theta, load).distance_to(body_profile(m)) > 0.0
 
 
 @pytest.mark.parametrize("size", SIZES)
-def test_shoulder_stop_limits_the_swing(size):
-    """The pad meets the shoulder exactly at theta_stop, so a hard squeeze cannot bend the
-    flexure further."""
+@pytest.mark.parametrize("load", LOADS)
+def test_shoulder_stop_limits_the_swing(size, load):
+    """The pad meets the shoulder exactly at the stop, so a hard squeeze (or a thick object)
+    cannot bend the flexure further. It lands on the flat stop face, STOP_MARGIN from its
+    upper end and clear of the leaf below."""
     m = mechanism(size)
-    assert flipper_placed(m, 0.97 * m.theta_stop).distance_to(body_profile(m)) > 0.02
-    assert flipper_placed(m, 1.03 * m.theta_stop).intersect(body_profile(m)) is not None
+    stop = m.stop(load)
+    assert flipper_placed(m, 0.97 * stop, load).distance_to(body_profile(m)) > 0.02
+    assert flipper_placed(m, 1.03 * stop, load).intersect(body_profile(m)) is not None
+    contact = stop_contact(m, load)
+    assert stop_face_top(m) + P.STOP_MARGIN - 1e-9 <= contact < -m.L / 2 - P.STOP_MARGIN
 
 
 @pytest.mark.parametrize("size", SIZES)
@@ -105,8 +153,8 @@ def test_print_time_budget(size):
     """At most about 30 min per clip on an MK4 (0.20mm STRUCTURAL, Prusament PETG).
 
     PrusaSlicer 2.9.6 estimates, model volume -> time: 6.9 cm3 -> 15 min 54 s,
-    11.9 cm3 -> 23 min 29 s, 15.9 cm3 -> 29 min 19 s, 17.2 cm3 -> 30 min 56 s,
-    18.1 cm3 -> 32 min 8 s. About 6.1 min plus 1.46 min per cm3 (a little pessimistic
+    11.9 cm3 -> 23 min 29 s, 15.9 cm3 -> 29 min 19 s, 16.2 cm3 -> 29 min 26 s,
+    17.2 cm3 -> 30 min 56 s, 18.1 cm3 -> 32 min 8 s. About 6.1 min plus 1.46 min per cm3 (a little pessimistic
     for the small sizes), so 30 min allows about 16.4 cm3."""
     minutes = 6.1 + 1.46 * make_clip(size).volume / 1000
     assert minutes <= 30.0
@@ -127,7 +175,16 @@ def test_coupon_levers_trade_opening_for_stiffness():
     for a, b in zip(levers, levers[1:]):
         assert b.stiffness > a.stiffness and b.opening < a.opening
     for m in levers:
-        assert m.strain(m.theta_stop) <= P.PETG_SAFE_STRAIN + 1e-9
+        for load in LOADS:
+            assert m.strain(m.stop(load), load) <= P.PETG_SAFE_STRAIN + 1e-9
+
+
+def test_force_respects_the_stop():
+    """An object thicker than the jaw can take is refused, not squeezed past the stop."""
+    m = mechanism("M")
+    assert m.theta_for(m.max_gap) == pytest.approx(m.theta_stop_jaw, abs=1e-6)
+    with pytest.raises(ValueError):
+        m.force(m.max_gap + 0.5)
 
 
 def test_desk_holds_a_photo_upright():
@@ -139,4 +196,6 @@ def test_desk_holds_a_photo_upright():
 
 def test_desk_cannot_hold_a_phone():
     """Documented limit (README): a 200 g phone would tip over; it needs a backrest."""
-    assert card_hold_margin(200.0, 150.0, 8.0) < 1.0
+    m = mechanism(P.DESK_SIZE)
+    assert 8.0 <= m.max_gap  # it fits in the jaw...
+    assert card_hold_margin(200.0, 150.0, 8.0) < 1.0  # ...but the clip cannot hold it up

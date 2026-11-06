@@ -17,18 +17,18 @@ It is one piece, printed in place: no assembly, nothing to snap in. It comes in 
 
 - **Flexure.** Each flipper hangs on a thin, flexible wall (a leaf, 2 lines wide). When you squeeze the shoulder, the leaf bends and the flipper swings out around it, like a seesaw.
 - **Comb jaws.** The inside of each flipper and the side of the body have teeth that mesh like a comb. At rest the tips of the teeth reach **1 mm past each other**, without touching. So the jaw is already "closed past zero": a thin card must push the flipper open by its own thickness plus that millimetre, and the flexure presses back. Paper and thin plastic are held because they have to wave through the teeth.
-- **Stop.** The top of the flipper meets the shoulder after a fixed swing. You cannot bend the leaf further than that, however hard you squeeze. That keeps the leaf at no more than half the elastic limit of PETG, so it does not tire.
+- **Stop.** The top of the flipper meets the shoulder after a fixed swing. You cannot bend the leaf further than that, however hard you squeeze, and neither can a thick object pushed into the jaw. At the stop, the most bent point of the leaf is stretched by 2.55 %: half of the 5.1 % at which PETG yields. So it does not tire.
 - **Printed on its back.** The leaf is a vertical wall, so it bends along its extrusion lines, never across the layers. That is the strong direction of a 3D print.
 
 | Size | Tux height | Jaw opening | Swing | Leaf length | Grip on a 1 mm card* |
 |---|---|---|---|---|---|
-| S | 50 mm | 5 mm | 21° | 10.2 mm | 0.31 N |
-| M | 65 mm | 10 mm | 31° | 14.9 mm | 0.13 N |
-| L | 75 mm | 13 mm | 33° | 16.0 mm | 0.09 N |
+| S | 50 mm | 4 mm | 19° | 9.8 mm | 0.31 N |
+| M | 65 mm | 8 mm | 29° | 15.4 mm | 0.12 N |
+| L | 75 mm | 11 mm | 34° | 18.7 mm | 0.08 N |
 
-\* Calculated at the flipper tip, with a 2-line leaf. The grip is about twice as strong halfway up the jaw, and grows with the thickness of what you clamp. **Tux Clip is a gentle clip**: it holds notes, photos, tickets and cables, not a heavy stack of paper. If you want a firmer grip, print the coupon and use a thicker leaf (see below).
+\* Calculated at the flipper tip, with a 2-line leaf. The grip is about twice as strong halfway up the jaw, and grows with the thickness of what you clamp. The jaw opening is what a squeeze gives you. Something thicker can still be pushed in from the side, up to 6 / 12 / 17 mm, before the stop. **Tux Clip is a gentle clip**: it holds notes, photos, tickets and cables, not a heavy stack of paper. If you want a firmer grip, print the coupon and use a thicker leaf (see below).
 
-All the numbers come from `src/tux_clip/model.py`. The tests check the opening, the strain in the leaf, the preload of the comb, and that the flipper never touches the body over its whole swing.
+All the numbers come from `src/tux_clip/model.py`. It does not treat the leaf as a circular arc: a force on the flipper bends the leaf more at one end than at the other, and the model follows that shape. The tests check the opening, the strain in the leaf, the preload of the comb, and that the flipper never touches the body over its whole swing.
 
 
 ### Desk version
@@ -51,9 +51,9 @@ There are three kinds of files. Use whichever you like:
 | Plate (3MF) | Parts | Colours | Time* | Filament* |
 |---|---|---|---|---|
 | `tux_clip_S` | clip S | black, white, orange | 16 min | 5 g |
-| `tux_clip_M` | clip M | black, white, orange | 23 min | 8 g |
+| `tux_clip_M` | clip M | black, white, orange | 24 min | 8 g |
 | `tux_clip_L` | clip L | black, white, orange | 29 min | 11 g |
-| `tux_clip_all_sizes` | S, M and L | black, white, orange | 1 h 08 min | 24 g |
+| `tux_clip_all_sizes` | S, M and L | black, white, orange | 1 h 09 min | 25 g |
 | `tux_clip_desk` | desk version | black, white, orange | 36 min | 14 g |
 | `coupon_flexure` | flexure coupon | any, no colour change | 16 min | 4 g |
 
@@ -92,13 +92,13 @@ Print `coupon_flexure.3mf` in one colour. It is a bar with three short flippers,
 
 | Dots | Leaf | Opening | Grip on a 1 mm card |
 |---|---|---|---|
-| 1 | 2 lines (0.86 mm) | 5.0 mm | 0.31 N |
-| 2 | 3 lines (1.26 mm) | 3.1 mm | 1.00 N |
-| 3 | 4 lines (1.67 mm) | 2.1 mm | 2.32 N |
+| 1 | 2 lines (0.86 mm) | 4.0 mm | 0.31 N |
+| 2 | 3 lines (1.26 mm) | 2.4 mm | 0.99 N |
+| 3 | 4 lines (1.67 mm) | 1.6 mm | 2.29 N |
 
 The coupon also tests your printer: the flippers are free only thanks to 0.5 mm gaps that run the full height of the part. If a flipper comes out stuck (PETG strings, or a squashed first layer), widen `SLOT_MIN` and `TOOTH_GAP` in `src/tux_clip/params.py` before you print the clips.
 
-Squeeze each flipper and feel the difference. A thicker leaf grips harder but opens less, because every leaf stops at the same safe bend. The clips use 2 lines (1 dot). To change it, set `FLEX_LINES` in `src/tux_clip/params.py`: the model makes the leaf as long as it needs and opens as far as the leaf allows. The tests then tell you the new opening.
+Squeeze each flipper and feel the difference. A thicker leaf grips harder but opens less, because every leaf stops at the same safe bend. The clips use 2 lines (1 dot). To change it, set `FLEX_LINES` in `src/tux_clip/params.py`: the model makes the leaf as long as it needs, keeps at least three teeth on the jaw, and opens as far as the leaf allows. The tests then tell you the new opening.
 
 
 ### Using it
