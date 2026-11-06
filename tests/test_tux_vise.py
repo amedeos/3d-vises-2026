@@ -182,14 +182,22 @@ def test_nothing_collides_over_the_travel(opening):
             assert _volume(screw, parts[name]) < 0.01, (opening, play, name)
 
 
-def test_screw_and_nut_fit_on_the_profile():
-    """Radial clearance between the screw's crest and the nut's root, and between the
-    nut's crest and the screw's core, both equal CLR_THREAD."""
-    nut_root = P.THREAD_D / 2 + P.CLR_THREAD
-    nut_crest = ROOT_R + P.CLR_THREAD
-    assert nut_root - P.THREAD_D / 2 == pytest.approx(P.CLR_THREAD)
-    assert nut_crest - ROOT_R == pytest.approx(P.CLR_THREAD)
-    assert P.CLR_THREAD >= 0.1
+def test_screw_and_nut_fit_on_the_geometry():
+    """A nominal screw in the real nut: centred in the pitch, the gap on both flanks is
+    CLR_THREAD * sin(45) (the nut's whole profile, crest and root, moved out by
+    CLR_THREAD). Slid along the axis by more than half its axial play, it touches."""
+    from math import sin
+
+    from tux_vise.model import make_nut
+    from tux_vise.thread import screw_thread
+
+    nut, screw = make_nut(), screw_thread(20.0)
+    centred = -P.PITCH / 2  # the screw's teeth sit in the nut's gaps
+    flank_gap = P.CLR_THREAD * sin(radians(P.THREAD_FLANK))
+    assert (Pos(0, 0, centred) * screw).distance_to(nut) == pytest.approx(flank_gap, abs=0.005)
+    half_play = flank_gap / sin(radians(P.THREAD_FLANK))  # axial, either way
+    for shift in (-1.2 * half_play, 1.2 * half_play):
+        assert (Pos(0, 0, centred + shift) * screw).distance_to(nut) < 1e-3
 
 
 # --- captive parts ------------------------------------------------------------------------------
