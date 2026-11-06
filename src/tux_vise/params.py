@@ -19,6 +19,8 @@ upright as used; Tux, the fork and the fish flat; the nut and the screw with the
 axis vertical.
 """
 
+from math import radians, tan
+
 from common.grid import FIRST_LAYER, LAYER, LINE_W, layer_top, layers, lines, snap_up  # noqa: F401
 
 # --- Tux, the fixed jaw: printed on his back ------------------------------------------
@@ -56,10 +58,11 @@ CLR_SLIDE = 0.30  # per side, rail <-> jaw slot
 # than 45 degrees. The crest flat and the root gap are one line wide each.
 THREAD_D = 14.0  # major diameter
 PITCH = 3.0
-THREAD_FLANK = 45.0  # flank angle from the axis-normal plane (ISO: 15)
+THREAD_FLANK = 45.0  # flank angle from the axis-normal plane (ISO: 15); >= 45 to print
 THREAD_FLAT = LINE_W  # crest flat and root gap
-# depth from the pitch: P = flat + 2 * depth * tan(90 - flank) + flat
-THREAD_DEPTH = (PITCH - 2 * THREAD_FLAT) / 2  # 1.05 mm with 45-degree flanks
+# Over the depth, each flank moves along the axis by depth * tan(flank), so one pitch is
+# flat + 2 * depth * tan(flank) + flat.
+THREAD_DEPTH = (PITCH - 2 * THREAD_FLAT) / (2 * tan(radians(THREAD_FLANK)))  # 1.05 mm
 # Radial clearance, given to the nut only (the screw is nominal). With 45-degree flanks,
 # a radial clearance c is 0.71 c across the flanks and about 2 c of axial play. The
 # thread coupon picks it: CLR_THREAD is the 2-dot hole.
@@ -89,7 +92,8 @@ FEET_RECESS = 1.0  # the lower front steps back over Tux's feet (they stand T_OR
 HEAD_D = 11.0
 HEAD_L = 4.0  # including the 45-degree cone under the head
 NECK_D = 8.0
-HEAD_PLAY = 0.6  # axial play of the head in its chamber
+HEAD_PLAY = 0.6  # room behind the head, to the fork slot (kinematics.head_play() is the
+# real axial play of the screw in the jaw: this plus the fork's clearances)
 FORK_T = layers(15)  # 3.0 mm, printed flat
 FORK_W = 16.0
 CLR_FORK = 0.20  # per side, fork in its slot and around the neck

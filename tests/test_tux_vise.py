@@ -6,7 +6,7 @@ outer envelope) against everything else, and the screw/nut fit is checked on the
 profile. The real fit is what the thread coupon is for.
 """
 
-from math import radians, tan
+from math import radians
 
 import pytest
 from build123d import Align, Cone, Cylinder, Part, Pos
@@ -48,14 +48,20 @@ def _volume(a: Part, b: Part) -> float:
 # --- thread ----------------------------------------------------------------------------
 
 def test_thread_profile_prints_vertically():
-    """45-degree flanks (ISO: 15) and whole-line flats; the teeth of screw and nut fit."""
+    """Flanks at THREAD_FLANK (>= 45 degrees) from horizontal, measured on the screw's
+    faces; whole-line flats; tooth at the root + root gap = one pitch."""
+    from math import acos, degrees
+
+    from tux_vise.thread import screw_thread
+
     assert P.THREAD_FLANK >= 45.0
-    assert P.THREAD_FLAT >= LINE_W - 1e-9
-    assert CREST_W + (ROOT_W - CREST_W) == pytest.approx(ROOT_W)
-    # tooth at the root + root gap = one pitch
+    assert P.THREAD_FLAT >= LINE_W - 1e-9 and CREST_W >= LINE_W - 1e-9
     assert ROOT_W + P.THREAD_FLAT == pytest.approx(P.PITCH)
-    assert ROOT_W - CREST_W == pytest.approx(2 * P.THREAD_DEPTH / tan(radians(P.THREAD_FLANK)))
     assert P.THREAD_D / 2 - ROOT_R == pytest.approx(P.THREAD_DEPTH)
+    flanks = [degrees(acos(min(1.0, abs(f.normal_at(0.5, 0.5).Z))))
+              for f in screw_thread(6.0).faces() if f.geom_type.name == "BSPLINE"]
+    flanks = [a for a in flanks if 5 < a < 85]  # not the crest, root or ends
+    assert flanks and min(flanks) == pytest.approx(P.THREAD_FLANK, abs=1.0)
 
 
 def test_coupon_holds_the_vise_clearance():
@@ -97,14 +103,11 @@ def test_only_the_thread_reaches_the_nut():
 def test_knob_clears_the_desk_and_the_end_block():
     """The fish turns within KNOB_R of the axis, below the axis height, and does not touch
     the end block when the jaw is closed."""
-    bb = fish_sketch(P.KNOB_R).bounding_box()
-    corners = [(x, y) for x in (bb.min.X, bb.max.X) for y in (bb.min.Y, bb.max.Y)]
-    reach = max((x * x + y * y) ** 0.5 for x, y in corners)
-    fish = fish_sketch(P.KNOB_R)
     from build123d import Circle
 
+    fish = fish_sketch(P.KNOB_R)
     assert (fish - Circle(P.KNOB_R + 1e-3)).area == pytest.approx(0, abs=1e-3)
-    assert P.KNOB_R < P.Z_AXIS and reach > 0
+    assert P.KNOB_R < P.Z_AXIS
     st = screw_stations()
     assert tip_x(0.0) + st["knob"] >= P.BASE_L + P.KNOB_GAP - 1e-9
 
@@ -216,7 +219,7 @@ def test_nut_is_captive():
     its clearance (walls on both sides), and cannot lift out while the screw goes
     through it. Only gravity holds it before the screw is in."""
     assert P.X_POCKET1 - P.X_POCKET0 - P.NUT_L == pytest.approx(2 * P.CLR_FIT)
-    assert P.NUT_W / 2 > P.THREAD_D / 2 + P.CLR_THREAD + 3 * LINE_W
+    assert P.NUT_W / 2 > P.THREAD_D / 2 + P.CLR_THREAD + lines(3)
 
 
 def test_vise_length():
@@ -234,12 +237,12 @@ def test_foot_screw_engagement(desk):
     shank never enters the nut."""
     from tux_vise.model import foot_layout, foot_screw_stations
 
+    from tux_vise.kinematics import overlap_turns
+
     f, st = foot_layout(), foot_screw_stations()
     tip = -(P.T_ARM + desk)
     nut0, nut1 = f["nut0"] + P.CLR_FIT, f["nut0"] + P.CLR_FIT + P.NUT_L
-    thread0, thread1 = tip - st["thread1"], tip
-    engaged = max(0.0, min(nut1, thread1) - max(nut0, thread0)) / P.PITCH
-    assert engaged >= P.MIN_TURNS
+    assert overlap_turns((tip - st["thread1"], tip), (nut0, nut1)) >= P.MIN_TURNS
     assert tip - st["thread1"] < nut0  # the shank starts below the nut
     assert tip - st["knob"] <= f["bottom0"] - 0.5  # the fish stays under the arm
 
@@ -264,3 +267,10 @@ def test_base_is_held_by_the_foot():
             P.THREAD_D / 2 + 0.1, length - P.KNOB_T, align=(Align.CENTER, Align.CENTER, Align.MIN)))
         assert _volume(envelope, foot) < 0.01, desk
         assert screw.bounding_box().max.Z == pytest.approx(-(P.T_ARM + desk))
+
+
+def test_tux_is_solid_between_the_feet():
+    """The tab under Tux reaches into his body: no hole is left between the feet."""
+    black = tux_colours()[0][0]
+    back = min(black.faces(), key=lambda f: f.center().Z)  # the face on the bed
+    assert not back.inner_wires()

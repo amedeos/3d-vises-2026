@@ -21,7 +21,7 @@ CORE_OVERLAP = 0.01
 
 ROOT_R = P.THREAD_D / 2 - P.THREAD_DEPTH  # screw core radius
 CREST_W = P.THREAD_FLAT  # axial width of the crest flat
-ROOT_W = P.THREAD_FLAT + 2 * P.THREAD_DEPTH / tan(radians(P.THREAD_FLANK))  # tooth at its root
+ROOT_W = P.THREAD_FLAT + 2 * P.THREAD_DEPTH * tan(radians(P.THREAD_FLANK))  # tooth at its root
 
 
 def _cylinder(r: float, length: float) -> Part:

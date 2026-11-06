@@ -26,7 +26,6 @@ from build123d import (
     Location,
     Part,
     Plane,
-    Polygon,
     Pos,
     Rectangle,
     Sketch,
@@ -34,7 +33,8 @@ from build123d import (
     offset,
 )
 
-from common.shapes import box_between, teardrop
+from common.grid import snap_down
+from common.shapes import box_between, polygon, teardrop
 from common.tux import close_crevices, spline_face, tux_profile
 
 from . import params as P
@@ -44,10 +44,6 @@ from .thread import screw_thread, threaded_hole
 # in the vise and facing +x: print x -> y, print y -> z, print z -> x.
 def _standing(x: float, y: float, z: float) -> Plane:
     return Plane(origin=(x, y, z), x_dir=(0, 1, 0), z_dir=(1, 0, 0))
-
-
-def _poly(*pts) -> Sketch:
-    return Sketch() + Polygon(*pts, align=None)
 
 
 def _yz(sketch: Sketch, x0: float, x1: float) -> Part:
@@ -79,7 +75,9 @@ def tenon_depth() -> float:
 def tux_colours() -> tuple[tuple[Part, str], ...]:
     """Tux on his back, as (part, colour) from the bottom up."""
     tux = tux_profile(P.TUX_H)
-    tenon = Pos(0, (1.0 - tenon_depth()) / 2) * Rectangle(P.TENON_W, 1.0 + tenon_depth())
+    # the tab reaches up into the body between the feet (it is higher there than under them)
+    top = (tux.body & Rectangle(1.0, 20.0)).bounding_box().min.Y + 1.0
+    tenon = Pos(0, (top - tenon_depth()) / 2) * Rectangle(P.TENON_W, top + tenon_depth())
     # the corners where the tab meets the feet are narrower than a line: fill them, but
     # only above the soles (Tux stands on the base)
     filled = close_crevices(tux.body + tenon) & (Pos(0, 50) * Rectangle(200, 100))
@@ -146,11 +144,11 @@ def end_block_top() -> float:
 def make_base() -> Part:
     """The base, printed upright as used."""
     hw, top_hw = P.BASE_W / 2, P.BASE_W / 2 - P.BEVEL
-    plate = _yz(_poly((-hw, 0), (hw, 0), (top_hw, P.BEVEL), (top_hw, P.T_PLATE),
+    plate = _yz(polygon((-hw, 0), (hw, 0), (top_hw, P.BEVEL), (top_hw, P.T_PLATE),
                       (-top_hw, P.T_PLATE), (-top_hw, P.BEVEL)), 0, P.BASE_L)
-    rail = _yz(_poly(*rail_points()), P.X_RAIL0, P.X_END + 0.5)
+    rail = _yz(polygon(*rail_points()), P.X_RAIL0, P.X_END + 0.5)
     bw, bh, ch = P.BACK_W / 2, P.BACK_H, 6.0  # backstop with 45-degree shoulders
-    back = _yz(_poly((-bw, 0), (bw, 0), (bw, bh - ch), (bw - ch, bh), (-bw + ch, bh),
+    back = _yz(polygon((-bw, 0), (bw, 0), (bw, bh - ch), (bw - ch, bh), (-bw + ch, bh),
                      (-bw, bh - ch)), 0, P.X_TUX - P.CLR_FIT)
     ew = P.NUT_W / 2 + P.CLR_FIT + P.WALL_SIDE
     block = box_between(P.X_END, P.BASE_L, -ew, ew, 0, end_block_top())
@@ -193,9 +191,9 @@ def fork_x() -> float:
 
 
 def fork_slot_bottom() -> float:
-    """Jaw coordinate z of the bottom of the fork slot, on a layer boundary."""
-    z_use = P.Z_AXIS - P.NECK_D / 2 - fork_tine_below() - P.CLR_FORK
-    return P.snap_up(z_use - P.JAW_Z0) - P.LAYER
+    """Jaw coordinate z of the bottom of the fork slot, on a layer boundary. The fork rests
+    on it, its tines at least fork_tine_below() under the neck."""
+    return snap_down(P.Z_AXIS - P.NECK_D / 2 - fork_tine_below() - P.JAW_Z0)
 
 
 def fork_tine_below() -> float:
@@ -208,14 +206,14 @@ def make_jaw() -> Part:
     """The moving jaw in its print pose (upright; z = 0 is its bottom, x = 0 its face)."""
     jaw = _yz(flipper_sketch(), 0, P.JAW_T)
     dz = -P.JAW_Z0  # use z -> jaw z
-    jaw -= Pos(0, 0, dz) * _yz(_poly(*slot_points()), -1, P.JAW_T + 1)
+    jaw -= Pos(0, 0, dz) * _yz(polygon(*slot_points()), -1, P.JAW_T + 1)
     # The lower front steps back over Tux's feet, with a 45-degree ceiling. The ceiling
     # stays above the roof of the rail slot: where two 45-degree roofs cross, the line
     # where they meet is flatter than 45 degrees and PrusaSlicer wants support under it.
     slot_peak = slot_top() + P.RAIL_HEAD_W / 2 + P.CLR_SLIDE - P.JAW_Z0
     z1 = P.snap_up(max(feet_top() + 0.6 - P.JAW_Z0, slot_peak + P.LAYER))
     r = P.FEET_RECESS
-    jaw -= _xz(_poly((-1, -1), (r, -1), (r, z1), (0, z1 + r), (-1, z1 + r + 1)), -30, 30)
+    jaw -= _xz(polygon((-1, -1), (r, -1), (r, z1), (0, z1 + r), (-1, z1 + r + 1)), -30, 30)
     # the head chamber and the bore behind it (the head passes through at assembly)
     jaw -= _bore_x(P.HEAD_D / 2 + 0.4, P.FACE_T, P.JAW_T + 1, 0, P.Z_AXIS + dz)
     # the fork's slot, open at the top; where the flipper gets too narrow for two lines of
@@ -248,7 +246,7 @@ def fork_slot_split() -> float:
 def fork_height() -> float:
     """From the tips of the tines to the top, which stands 2 mm above the jaw (to pull it
     out)."""
-    return jaw_top() + 2.0 - (P.JAW_Z0 + fork_slot_bottom() + P.CLR_FORK)
+    return jaw_top() + 2.0 - (P.JAW_Z0 + fork_slot_bottom())
 
 
 @cache
@@ -256,9 +254,10 @@ def make_fork() -> Part:
     """The fork, flat: tines down (y = 0 at their tips), the screw's neck between them."""
     w, h = P.FORK_W / 2, fork_height()
     gap = P.NECK_D / 2 + P.CLR_FORK
-    neck_top = fork_tine_below() + P.NECK_D + P.CLR_FORK
-    outline = _poly((-w, 0), (w, 0), (w, h - w), (0, h), (-w, h - w))
-    fork = extrude(outline - _poly((-gap, -1), (gap, -1), (gap, neck_top),
+    # resting on the slot floor, the top of the opening clears the neck by CLR_FORK
+    neck_top = P.Z_AXIS + gap - (P.JAW_Z0 + fork_slot_bottom())
+    outline = polygon((-w, 0), (w, 0), (w, h - w), (0, h), (-w, h - w))
+    fork = extrude(outline - polygon((-gap, -1), (gap, -1), (gap, neck_top),
                                    (-gap, neck_top)), P.FORK_T, dir=(0, 0, 1))
     fork.label = "tux_vise_fork"
     return fork
@@ -356,8 +355,8 @@ def use_location(name: str, opening: float = 0.0) -> Location:
         return Location()
     if name == "jaw":
         return Location((jaw_x(opening), 0, P.JAW_Z0))
-    if name == "fork":
-        z = P.JAW_Z0 + fork_slot_bottom() + P.CLR_FORK
+    if name == "fork":  # resting on the floor of its slot
+        z = P.JAW_Z0 + fork_slot_bottom()
         return _standing(jaw_x(opening) + fork_x() + P.CLR_FORK, 0, z).location
     if name == "nut":
         return Plane(origin=(nut_x0(), 0, P.Z_AXIS), x_dir=(0, 1, 0),
@@ -454,16 +453,16 @@ def foot_in_place() -> Part:
     """The desk foot in the vise frame (channel floor at z = 0, x from -FOOT_CAP)."""
     f = foot_layout()
     ch0, lip_top = _channel_half(0.0), P.LIP_TOP
-    profile = _poly(
+    profile = polygon(
         (f["spine0"], f["bottom0"]), (f["arm_end"], f["bottom0"]),
         (f["arm_end"], f["bottom1"]), (f["spine1"], f["bottom1"]),
         (f["spine1"], -P.T_ARM), (f["lip_out"], -P.T_ARM), (f["lip_out"], lip_top),
         (f["spine0"], lip_top))
     side = _channel_half(lip_top)  # the base's vertical side, grown
     knee = ch0 - side  # where the grown bevel meets it (45 degrees: rise = run)
-    channel = _poly((-ch0, 0), (ch0, 0), (side, knee), (side, lip_top + 1),
+    channel = polygon((-ch0, 0), (ch0, 0), (side, knee), (side, lip_top + 1),
                     (-side, lip_top + 1), (-side, knee))
-    nut = _poly((f["screw_y"] - P.NUT_W / 2 - P.CLR_FIT, f["nut0"]),
+    nut = polygon((f["screw_y"] - P.NUT_W / 2 - P.CLR_FIT, f["nut0"]),
                 (f["screw_y"] + P.NUT_W / 2 + P.CLR_FIT, f["nut0"]),
                 (f["screw_y"] + P.NUT_W / 2 + P.CLR_FIT, f["nut1"]),
                 (f["screw_y"] - P.NUT_W / 2 - P.CLR_FIT, f["nut1"]))
@@ -513,13 +512,12 @@ def make_foot_screw() -> Part:
 
 
 def foot_locations(desk: float) -> dict[str, Location]:
-    """Where the foot, its nut and its screw go for a desk `desk` mm thick (vise frame,
+    """Where the foot's nut and screw go (the foot itself: `foot_in_place()`) for a desk `desk` mm thick (vise frame,
     base on the foot: the base's bottom at z = 0)."""
     f = foot_layout()
     tip = -(P.T_ARM + desk)
     length = foot_screw_stations()["length"]
     return {
-        "foot": foot_print_location().inverse() * Location(),
         "foot_nut": Location((P.FOOT_L / 2, f["screw_y"], f["nut0"] + P.CLR_FIT)),
         "foot_screw": Location((P.FOOT_L / 2, f["screw_y"], tip - length)),
     }

@@ -41,14 +41,15 @@ def nut_span() -> tuple[float, float]:
     return nut_x0(), nut_x0() + P.NUT_L
 
 
+def overlap_turns(a: tuple[float, float], b: tuple[float, float]) -> float:
+    """Turns of thread where the ranges a (thread) and b (nut) overlap."""
+    return max(0.0, min(a[1], b[1]) - max(a[0], b[0])) / P.PITCH
+
+
 def engaged_turns(opening: float) -> float:
     """Turns of thread inside the nut, in the worse of the push and pull positions."""
-    n0, n1 = nut_span()
-    turns = []
-    for play in (0.0, head_play()):
-        t0, t1 = thread_span(opening, play)
-        turns.append(max(0.0, min(n1, t1) - max(n0, t0)) / P.PITCH)
-    return min(turns)
+    return min(overlap_turns(thread_span(opening, play), nut_span())
+               for play in (0.0, head_play()))
 
 
 def table(step: float = 1.0) -> list[tuple[float, float, float]]:

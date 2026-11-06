@@ -35,7 +35,9 @@ SIDE = {"elev": 14, "azim": 100}
 
 def vise_items(opening: float, with_board: bool = False):
     """The assembled vise as (part, colour), the fish turned to match the opening."""
-    angle = -360.0 * turns_to_close(opening)  # clockwise seen from the knob closes it
+    # right-handed thread: turning clockwise seen from the knob (a positive turn about the
+    # screw's print axis) drives it towards Tux
+    angle = 360.0 * turns_to_close(opening)
     items = [(use_location("tux") * part, colour) for part, colour in tux_colours()]
     for name in ("base", "jaw", "fork", "nut"):
         items.append((use_location(name, opening) * VISE_PARTS[name](), COLOUR[f"tux_vise_{name}"]))
@@ -101,7 +103,6 @@ def listing(out: Path, with_gifs: bool = False) -> None:
     if with_gifs:
         steps = 18
         openings = [P.OPEN_MAX * (1 - k / steps) for k in range(steps + 1)]
-        openings += openings[-2:0:-1]
         gif((vise_items(o) for o in openings), out / "vise_turn.gif", duration=90, **HERO,
             zoom=1.3, size=(560, 450))
 
