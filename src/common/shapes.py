@@ -1,6 +1,8 @@
 """Small geometry helpers shared by the part modules."""
 
-from build123d import Box, Part, Pos, Rot, Sphere, scale
+from math import sqrt
+
+from build123d import Box, Circle, Part, Polygon, Pos, Rot, Sketch, Sphere, scale
 
 
 def box_between(x0: float, x1: float, y0: float, y1: float, z0: float, z1: float) -> Part:
@@ -16,3 +18,15 @@ def ellipsoid(cx: float, cy: float, cz: float, a: float, b: float, c: float) -> 
     material, below a cut-off plane, or above the surface of a cut).
     """
     return Pos(cx, cy, cz) * scale(Rot(0, 90, 0) * Sphere(1.0), (a, b, c))
+
+
+def teardrop(radius: float) -> Sketch:
+    """A circle with a pointed 45-degree roof towards +y (local frame of the sketch).
+
+    Extruded along a horizontal axis, it makes a hole that prints without support: the
+    roof replaces the top of the circle, where the surface would be flatter than 45
+    degrees.
+    """
+    s = radius / sqrt(2)
+    return Sketch() + Circle(radius) + Polygon((-s, s), (s, s), (0, radius * sqrt(2)),
+                                               align=None)
