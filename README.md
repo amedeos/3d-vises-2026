@@ -44,8 +44,8 @@ Prusa MK4 (Input Shaper firmware), **Prusament PETG**, 0.4 mm nozzle, **0.20mm S
 
 There are three kinds of files. Use whichever you like:
 
-- **`out/3mf/tux_clip/projects/*.3mf` — easiest.** PrusaSlicer projects with the MK4 + 0.20mm STRUCTURAL + Prusament PETG settings already loaded. The colour changes are already set.
-- **`out/3mf/tux_clip/*.3mf`** — the same plates without print settings. They also include the colour changes. Use them with any printer profile.
+- **`out/3mf/tux_clip/projects/*.3mf` — easiest.** PrusaSlicer projects with the MK4 + 0.20mm STRUCTURAL + Prusament PETG settings already loaded. The colour changes are already set, and the preview starts in the right colour (black for Tux).
+- **`out/3mf/tux_clip/*.3mf`** — the same plates without print settings. They also include the colour changes. Use them with any printer profile. PrusaSlicer shows the first layers in the colour of your filament profile (orange for Prusament PETG): that is only the preview, the print is the same.
 - **`out/stl/tux_clip/*.stl`** — one file per part, already lying on its back.
 
 | Plate (3MF) | Parts | Colours | Time* | Filament* |

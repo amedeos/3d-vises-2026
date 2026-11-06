@@ -8,6 +8,9 @@ For every plate in out/3mf it:
    (a second slice with automatic supports on must create no support at all);
 2. writes a PrusaSlicer project to out/3mf/<model>/projects/: the same plate plus the full
    print configuration, so the MK4 settings and the colour change load with one click.
+   The project's filament colour is the plate's start colour: PrusaSlicer ignores the
+   object colours of a 3MF and shows the first layers in the colour of the filament
+   profile (#FF8000, orange, for Prusament PETG).
 
 PrusaSlicer writes its complete configuration at the end of every G-code file, in the
 same "; key = value" format that it stores inside project 3MF files. We take it from
@@ -37,6 +40,7 @@ PROFILES = {
     "--material-profile": "Prusament PETG @PGIS",  # default material for this model
 }
 CONFIG_ENTRY = "Metadata/Slic3r_PE.config"
+MODEL_ENTRY = "3D/3dmodel.model"
 
 
 def prusaslicer_command() -> list[str]:
@@ -94,6 +98,7 @@ def summary(gcode: Path) -> dict:
         "m600": len(re.findall(r"^M600", text, re.MULTILINE)),
         "support_lines": text.count(";TYPE:Support material"),
         "printer": value("printer_settings_id"),
+        "colour": value("filament_colour"),
     }
 
 
@@ -117,6 +122,23 @@ def stored_colour_changes(plate: Path) -> list[float]:
             return []
         xml = z.read(M600_ENTRY).decode()
     return [float(v) for v in re.findall(r'print_z="([\d.]+)"', xml)]
+
+
+def start_colours(plate: Path) -> set[str]:
+    """The object colours of a 3MF plate ('#RRGGBB'): the filament each object starts with."""
+    with zipfile.ZipFile(plate) as z:
+        xml = z.read(MODEL_ENTRY).decode()
+    return {c.upper() for c in re.findall(r'displaycolor="(#[0-9A-Fa-f]{6})', xml)}
+
+
+def with_start_colour(config: str, colour: str) -> str:
+    """The config with `colour` as the filament colour, the colour PrusaSlicer shows for the
+    layers before the first M600 (the 3D view and the preview; the G-code does not change)."""
+    config, n = re.subn(r"^; filament_colour = .*$", f"; filament_colour = {colour}", config,
+                        flags=re.MULTILINE)
+    if n != 1:
+        raise ValueError(f"expected one filament_colour line in the config, found {n}")
+    return config
 
 
 def make_project(plate: Path, config: str, out: Path) -> None:
@@ -153,15 +175,24 @@ def main(folder: Path, planned: dict[str, list[Change]], model: str) -> int:
             if info["m600"] != len(expected) or sorted(info["m600_z"]) != expected:
                 issues.append(f"expected M600 at {expected}, found {info['m600']} "
                               f"at {info['m600_z']}")
+            config = config_from_gcode(gcode)
+            colours = start_colours(plate)
+            if len(colours) == 1:
+                config = with_start_colour(config, *colours)
+            else:
+                issues.append(f"objects start in different colours: {sorted(colours)}")
             project = folder / "projects" / plate.name
-            make_project(plate, config_from_gcode(gcode), project)
+            make_project(plate, config, project)
             # the project alone (no profile options) must give the same printer
             check = Path(tmp) / f"{plate.stem}.check.gcode"
             slice_plate(cmd, project, check, profiles=False)
             if info["bed"] != "0x0,250x0,250x210,0x210":
                 issues.append(f"not the MK4 bed ({info['bed']}): profiles not loaded")
-            if summary(check)["printer"] != info["printer"]:
+            loaded = summary(check)
+            if loaded["printer"] != info["printer"]:
                 issues.append("project does not carry the printer settings")
+            if len(colours) == 1 and loaded["colour"].upper() != next(iter(colours)):
+                issues.append(f"project starts in {loaded['colour']}, the plate in {colours}")
             problems += bool(issues)
             print(f"{plate.stem:32s} {info['time']:>12s} {info['filament_g']:>7s} g  "
                   f"M600 at Z {info['m600_z'] or '-'}  {'OK' if not issues else '; '.join(issues)}")

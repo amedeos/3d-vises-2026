@@ -191,6 +191,12 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
   without print settings. That is how the M600 travels with the plates.
 - The `code` and `mode` elements need `bed_idx="0"` (PrusaSlicer 2.9 has multiple beds).
   Without it the CLI still applies the colour change, but the GUI silently drops it.
+- PrusaSlicer ignores the object colours of a 3MF (`displaycolor`). It shows the layers
+  before the first M600 in the filament profile's `filament_colour` (`#FF8000`, orange, for
+  Prusament PETG). `slicer.py` writes the plate's start colour (the object colour) as
+  `filament_colour` in each project and checks that a slice of the project reads it back.
+  A plain plate cannot carry it without becoming a project (a 3MF with
+  `Slic3r_PE.config`), and the plain plates must work with any printer profile.
 - The CLI crashes on `--export-3mf` without a display (it renders a thumbnail with
   OpenGL). So `slicer.py` slices to text G-code instead. It copies the
   `; prusaslicer_config` block into `Metadata/Slic3r_PE.config` and sets
