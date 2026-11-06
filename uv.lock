@@ -997,6 +997,7 @@ dependencies = [
     { name = "build123d" },
     { name = "numpy" },
     { name = "pillow" },
+    { name = "shapely" },
     { name = "trimesh" },
 ]
 
@@ -1006,7 +1007,6 @@ dev = [
     { name = "pytest" },
     { name = "rtree" },
     { name = "scipy" },
-    { name = "shapely" },
 ]
 
 [package.metadata]
@@ -1015,6 +1015,7 @@ requires-dist = [
     { name = "build123d", specifier = ">=0.13.0" },
     { name = "numpy", specifier = ">=2" },
     { name = "pillow", specifier = ">=13.0.0" },
+    { name = "shapely", specifier = ">=2.2.0" },
     { name = "trimesh", specifier = ">=5.2.0" },
 ]
 
@@ -1024,7 +1025,6 @@ dev = [
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "rtree", specifier = ">=1.4.1" },
     { name = "scipy", specifier = ">=1.18" },
-    { name = "shapely", specifier = ">=2.2.0" },
 ]
 
 [[package]]

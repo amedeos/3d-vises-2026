@@ -7,8 +7,8 @@ Print poses (each part rests on z = 0):
 - jaw: upright, as used, shifted down by JAW_Z0.
 - fork: flat.
 - nut: thread axis vertical.
-- screw: thread axis vertical, standing on its fish knob; the head is at the top.
-- coupon: the gauge strip flat (holes vertical), the stub standing on its small fish.
+- screw: thread axis vertical, standing on its gnu knob; the head is at the top.
+- coupon: the gauge strip flat (holes vertical), the stub standing on a gnu knob too.
 
 `use_location(name, opening)` moves a part from its print pose into the vise, with the
 jaw opened by `opening` (mm, from the white belly to the jaw face).
@@ -20,7 +20,6 @@ from math import sqrt
 from build123d import (
     Align,
     Box,
-    Kind,
     Circle,
     Cylinder,
     Location,
@@ -28,9 +27,9 @@ from build123d import (
     Plane,
     Pos,
     Rectangle,
+    Rot,
     Sketch,
     extrude,
-    offset,
 )
 
 from common.grid import snap_down
@@ -38,6 +37,7 @@ from common.shapes import box_between, polygon, teardrop
 from common.tux import close_crevices, spline_face, tux_profile
 
 from . import params as P
+from .gnu import gnu_sketch
 from .thread import screw_thread, threaded_hole
 
 # Plane that maps a flat print pose (x across, y up, z = thickness) onto a part standing
@@ -274,24 +274,6 @@ def make_nut(clearance: float = P.CLR_THREAD) -> Part:
     return nut
 
 
-def fish_sketch(radius: float) -> Sketch:
-    """A fish facing -x, scaled so that it turns within `radius` around the origin (the
-    screw axis). The eye is a hole."""
-    pts = [(-1.0, 0.02), (-0.9, 0.24), (-0.62, 0.42), (-0.32, 0.5), (-0.12, 0.68),
-           (0.06, 0.47), (0.34, 0.27), (0.52, 0.12), (0.85, 0.44), (0.74, 0.0),
-           (0.85, -0.44), (0.52, -0.12), (0.34, -0.27), (0.12, -0.44), (-0.02, -0.56),
-           (-0.3, -0.46), (-0.68, -0.34), (-0.92, -0.16)]
-    axis = (-0.2, 0.0)  # the middle of the body
-    pts = [(x - axis[0], y - axis[1]) for x, y in pts]
-    s = radius / max(sqrt(x * x + y * y) for x, y in pts) * 0.97  # the spline bulges a bit
-    fish = Sketch() + spline_face([(x * s, y * s) for x, y in pts])
-    # round off the tips of the tail and fins to at least two lines
-    r = P.lines(2) / 2 + 0.05
-    fish = offset(offset(fish, -r, kind=Kind.ARC), r, kind=Kind.ARC)
-    eye = Pos((-0.72 - axis[0]) * s, 0.1 * s) * Circle(max(P.lines(4) / 2, 0.06 * s))
-    return fish - eye
-
-
 def screw_stations() -> dict[str, float]:
     """Distances along the screw from its tip (s = 0, in the jaw) to the knob.
 
@@ -308,13 +290,15 @@ def screw_stations() -> dict[str, float]:
 
 @cache
 def make_screw() -> Part:
-    """The screw standing on its fish knob (print pose): knob at z = 0, head at the top."""
+    """The screw standing on its gnu knob (print pose): knob at z = 0, head at the top."""
     st = screw_stations()
     length = st["length"]
     z = lambda s: length - s  # noqa: E731  (screw station -> print height)
-    fish = extrude(fish_sketch(P.KNOB_R), P.KNOB_T, dir=(0, 0, 1))
+    # use_location turns the knob's +y downwards: turned over, the gnu's horns point up
+    # at every whole turn from fully open
+    knob = extrude(Rot(0, 0, 180) * gnu_sketch(P.KNOB_R), P.KNOB_T, dir=(0, 0, 1))
     # 0.1 mm wider than the thread, so the thread's square end sits on it
-    shank = Pos(0, 0, P.KNOB_T) * Cylinder(P.THREAD_D / 2 + 0.1, z(st["thread1"]) - P.KNOB_T,
+    shank = Pos(0, 0, P.KNOB_T) * Cylinder(P.SHANK_R, z(st["thread1"]) - P.KNOB_T,
                                            align=(Align.CENTER, Align.CENTER, Align.MIN))
     thread = Pos(0, 0, z(st["thread1"])) * screw_thread(st["thread1"] - st["thread0"])
     neck = Pos(0, 0, z(st["thread0"])) * Cylinder(
@@ -325,7 +309,7 @@ def make_screw() -> Part:
                                               taper=-45.0, dir=(0, 0, 1))
     head = Pos(0, 0, z(st["head"]) + cone_h) * Cylinder(
         P.HEAD_D / 2, st["head"] - cone_h, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    screw = fish + shank + thread + neck + cone + head
+    screw = knob + shank + thread + neck + cone + head
     screw.label = "tux_vise_screw"
     return screw
 
@@ -406,11 +390,11 @@ def make_gauge() -> Part:
 
 @cache
 def make_stub() -> Part:
-    """20 mm of the real screw thread on a small fish, to try in the gauge's holes."""
-    fish = extrude(fish_sketch(18.0), P.KNOB_T, dir=(0, 0, 1))
-    base = Pos(0, 0, P.KNOB_T) * Cylinder(P.THREAD_D / 2 + 0.1, P.LAYER,
+    """20 mm of the real screw thread on a gnu knob, to try in the gauge's holes."""
+    knob = extrude(gnu_sketch(P.KNOB_R), P.KNOB_T, dir=(0, 0, 1))
+    base = Pos(0, 0, P.KNOB_T) * Cylinder(P.SHANK_R, P.LAYER,
                                           align=(Align.CENTER, Align.CENTER, Align.MIN))
-    stub = fish + base + Pos(0, 0, P.KNOB_T + P.LAYER) * screw_thread(P.GAUGE_STUB)
+    stub = knob + base + Pos(0, 0, P.KNOB_T + P.LAYER) * screw_thread(P.GAUGE_STUB)
     stub.label = "coupon_thread_stub"
     return stub
 
@@ -499,14 +483,14 @@ def foot_screw_stations() -> dict[str, float]:
 
 @cache
 def make_foot_screw() -> Part:
-    """The foot screw standing on its small fish: thread at the top, tip flat."""
+    """The foot screw standing on its gnu knob: thread at the top, tip flat."""
     st = foot_screw_stations()
     length = st["length"]
-    fish = extrude(fish_sketch(18.0), P.KNOB_T, dir=(0, 0, 1))
-    shank = Pos(0, 0, P.KNOB_T) * Cylinder(P.THREAD_D / 2 + 0.1, length - st["thread1"] - P.KNOB_T,
+    knob = extrude(gnu_sketch(P.KNOB_R), P.KNOB_T, dir=(0, 0, 1))
+    shank = Pos(0, 0, P.KNOB_T) * Cylinder(P.SHANK_R, length - st["thread1"] - P.KNOB_T,
                                            align=(Align.CENTER, Align.CENTER, Align.MIN))
     thread = Pos(0, 0, length - st["thread1"]) * screw_thread(st["thread1"])
-    screw = fish + shank + thread
+    screw = knob + shank + thread
     screw.label = "tux_vise_foot_screw"
     return screw
 

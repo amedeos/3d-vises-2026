@@ -24,7 +24,6 @@ from tux_vise.kinematics import (
 from tux_vise.model import (
     assembly,
     feet_top,
-    fish_sketch,
     fork_x,
     jaw_x,
     make_base,
@@ -35,6 +34,7 @@ from tux_vise.model import (
     tux_colours,
     use_location,
 )
+from tux_vise.gnu import gnu_sketch, holes
 from tux_vise.thread import CREST_W, ROOT_R, ROOT_W
 
 OPENINGS = [0.0, P.OPEN_MAX / 3, 2 * P.OPEN_MAX / 3, P.OPEN_MAX]
@@ -101,16 +101,33 @@ def test_only_the_thread_reaches_the_nut():
 
 
 def test_knob_clears_the_desk_and_the_end_block():
-    """The fish turns within KNOB_R of the axis, below the axis height, and does not touch
+    """The gnu turns within KNOB_R of the axis, below the axis height, and does not touch
     the end block when the jaw is closed."""
     from build123d import Circle
 
-    fish = fish_sketch(P.KNOB_R)
-    assert (fish - Circle(P.KNOB_R + 1e-3)).area == pytest.approx(0, abs=1e-3)
+    gnu = gnu_sketch(P.KNOB_R)
+    assert (gnu - Circle(P.KNOB_R + 1e-3)).area == pytest.approx(0, abs=1e-3)
     assert P.KNOB_R < P.Z_AXIS
     st = screw_stations()
     assert tip_x(0.0) + st["knob"] >= P.BASE_L + P.KNOB_GAP - 1e-9
 
+
+
+def test_gnu_knob_carries_the_shank():
+    """The knob is the bottom of every screw: the plain shank stands on it, so the knob
+    covers the shank's disc and no eye or nostril runs under it. The holes are real
+    holes (at least one line) with at least two lines of wall to the outline."""
+    from build123d import Circle, Pos
+
+    gnu = gnu_sketch(P.KNOB_R)
+    assert (Circle(P.SHANK_R) - gnu).area == pytest.approx(0, abs=1e-3)
+    assert len(gnu.faces()) == 1
+    for x, y, r in holes(P.KNOB_R):
+        assert (x * x + y * y) ** 0.5 - r >= P.SHANK_R + LINE_W
+        assert 2 * r >= LINE_W
+        wall = Pos(x, y) * Circle(r + lines(2)) - Pos(x, y) * Circle(r + 1e-3)
+        assert (wall - gnu).area == pytest.approx(0, abs=1e-3)  # the wall around the hole
+    assert len(gnu.faces()[0].inner_wires()) == len(holes(P.KNOB_R))
 
 # --- stops -----------------------------------------------------------------------------------
 
@@ -163,7 +180,7 @@ def screw_envelope(opening: float, play: float = 0.0) -> Part:
             + cyl(P.HEAD_D / 2, st["head"] - cone_h, st["head"], P.NECK_D / 2)
             + cyl(P.NECK_D / 2, st["head"], st["thread0"])
             + cyl(P.THREAD_D / 2, st["thread0"], st["thread1"])
-            + cyl(P.THREAD_D / 2 + 0.1, st["thread1"], st["knob"])
+            + cyl(P.SHANK_R, st["thread1"], st["knob"])
             + cyl(P.KNOB_R, st["knob"], st["length"]))
 
 
@@ -244,7 +261,7 @@ def test_foot_screw_engagement(desk):
     nut0, nut1 = f["nut0"] + P.CLR_FIT, f["nut0"] + P.CLR_FIT + P.NUT_L
     assert overlap_turns((tip - st["thread1"], tip), (nut0, nut1)) >= P.MIN_TURNS
     assert tip - st["thread1"] < nut0  # the shank starts below the nut
-    assert tip - st["knob"] <= f["bottom0"] - 0.5  # the fish stays under the arm
+    assert tip - st["knob"] <= f["bottom0"] - 0.5  # the gnu stays under the arm
 
 
 def test_base_is_held_by_the_foot():
@@ -264,7 +281,7 @@ def test_base_is_held_by_the_foot():
         assert _volume(nut, foot) < 0.05
         length = foot_screw_stations()["length"]
         envelope = loc["foot_screw"] * (Pos(0, 0, P.KNOB_T) * Cylinder(
-            P.THREAD_D / 2 + 0.1, length - P.KNOB_T, align=(Align.CENTER, Align.CENTER, Align.MIN)))
+            P.SHANK_R, length - P.KNOB_T, align=(Align.CENTER, Align.CENTER, Align.MIN)))
         assert _volume(envelope, foot) < 0.01, desk
         assert screw.bounding_box().max.Z == pytest.approx(-(P.T_ARM + desk))
 

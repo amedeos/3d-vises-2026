@@ -9,6 +9,7 @@ dependencies = [
     "build123d>=0.13.0",
     "numpy>=2",
     "pillow>=13.0.0",
+    "shapely>=2.2.0",  # the gnu knob's outline (tux_vise.gnu)
     "trimesh>=5.2.0",
 ]
 
@@ -25,7 +26,6 @@ dev = [
     "pytest>=9.1.1",
     "rtree>=1.4.1",
     "scipy>=1.18",
-    "shapely>=2.2.0",
 ]
 
 [tool.pytest.ini_options]

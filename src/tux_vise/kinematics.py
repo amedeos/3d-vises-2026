@@ -1,4 +1,4 @@
-"""Tux Vise kinematics: turns of the fish knob -> jaw opening, and the thread engagement.
+"""Tux Vise kinematics: turns of the gnu knob -> jaw opening, and the thread engagement.
 
     uv run python -m tux_vise.kinematics
 

@@ -33,8 +33,14 @@ KNOB_END = {"elev": 10, "azim": 4}
 SIDE = {"elev": 14, "azim": 100}
 
 
+def upright(opening: float) -> float:
+    """The opening nearest to `opening` at a whole number of turns from fully open: there
+    the gnu knob stands upright, horns up."""
+    return P.OPEN_MAX - P.PITCH * round((P.OPEN_MAX - opening) / P.PITCH)
+
+
 def vise_items(opening: float, with_board: bool = False):
-    """The assembled vise as (part, colour), the fish turned to match the opening."""
+    """The assembled vise as (part, colour), the gnu turned to match the opening."""
     # right-handed thread: turning clockwise seen from the knob (a positive turn about the
     # screw's print axis) drives it towards Tux
     angle = 360.0 * turns_to_close(opening)
@@ -57,7 +63,7 @@ def foot_items(desk: float = 25.0):
     """The vise on its desk foot, clamped to the edge of a desk `desk` mm thick."""
     loc = foot_locations(desk)
     f = foot_layout()
-    items = vise_items(12.0) + [
+    items = vise_items(upright(12.0)) + [
         (foot_in_place(), COLOUR["tux_vise_foot"]),
         (loc["foot_nut"] * make_nut(), COLOUR["tux_vise_foot_nut"]),
         (loc["foot_screw"] * make_foot_screw(), COLOUR["tux_vise_foot_screw"]),
@@ -84,14 +90,15 @@ def parts_on_bed() -> list[tuple[Part, str]]:
 def listing(out: Path, with_gifs: bool = False) -> None:
     """Every image for the Printables page."""
     out.mkdir(parents=True, exist_ok=True)
-    # whole turns from fully open keep the fish level
+    # whole turns from fully open keep the gnu upright
     closed_on_board = P.OPEN_MAX - P.PITCH * int(P.OPEN_MAX / P.PITCH)
     render(vise_items(closed_on_board, with_board=True), out / "vise_hero.png", **HERO, zoom=1.3,
            size=(1000, 800))
-    render(vise_items(P.OPEN_MAX * 0.6), out / "vise_open.png", **HERO, zoom=1.3,
+    render(vise_items(upright(P.OPEN_MAX * 0.6)), out / "vise_open.png", **HERO, zoom=1.3,
            size=(1000, 800))
-    render(vise_items(12.0), out / "vise_knob_end.png", **KNOB_END, zoom=1.35, size=(800, 800))
-    render(vise_items(12.0), out / "vise_side.png", **SIDE, zoom=1.3, size=(1000, 700))
+    render(vise_items(upright(12.0)), out / "vise_knob_end.png", **KNOB_END, zoom=1.35,
+           size=(800, 800))
+    render(vise_items(upright(12.0)), out / "vise_side.png", **SIDE, zoom=1.3, size=(1000, 700))
     render(parts_on_bed(), out / "vise_parts.png", elev=48, azim=-70, zoom=1.25,
            size=(1200, 700))
     render(foot_items(), out / "vise_on_desk.png", elev=18, azim=-120, zoom=1.2,

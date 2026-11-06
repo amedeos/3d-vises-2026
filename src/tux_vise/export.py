@@ -14,6 +14,7 @@ from build123d import Part
 from common.export import Change, Plates, centred, export_model, row
 
 from . import params as P
+from .gnu import holes
 from .model import (
     make_base,
     make_foot,
@@ -38,7 +39,8 @@ CHANGES: list[Change] = [(M600_WHITE, "white"), (M600_ORANGE, "orange")]
 # Declared widths, checked by the tests: thin features must be whole lines (2 or more),
 # gaps at least one line. The vise has no thin walls; its narrowest holes are these.
 THIN_FEATURES: dict[str, float] = {}
-GAPS = {"fish eye": P.lines(4), "fork opening": P.NECK_D + 2 * P.CLR_FORK,
+GAPS = {"gnu eyes and nostrils": min(2 * r for _, _, r in holes(P.KNOB_R)),
+        "fork opening": P.NECK_D + 2 * P.CLR_FORK,
         "thread root gap": P.THREAD_FLAT}
 
 # Suggested colours. Tux has three (M600); every other plate prints in one colour, so the

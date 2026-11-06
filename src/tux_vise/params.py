@@ -1,6 +1,6 @@
 """Single source of truth for every Tux Vise dimension (millimetres, degrees unless noted).
 
-Assembly frame ("use"): x runs along the screw, from Tux (x = 0 side) to the fish knob;
+Assembly frame ("use"): x runs along the screw, from Tux (x = 0 side) to the gnu knob;
 y across; z up; the bottom of the base on z = 0.
 
 - Tux (the fixed jaw) stands at the x = 0 end, his belly facing +x. He prints on his back
@@ -9,13 +9,13 @@ y across; z up; the bottom of the base on z = 0.
   nut pocket.
 - The moving jaw is a flipper. It slides on the rail; its face is the clamping face.
 - The screw goes through the nut in the end block. Its head sits in a chamber in the jaw
-  and a fork, dropped into the jaw from above, keeps it there: turning the fish knob
+  and a fork, dropped into the jaw from above, keeps it there: turning the gnu knob
   pushes the jaw closed and pulls it open.
 - The nut is a separate insert, printed with its axis vertical, so the thread prints
-  well. The screw prints vertically too, standing on its fish knob.
+  well. The screw prints vertically too, standing on its gnu knob.
 
 Every part is printed in its own pose (see model.py): the base, the jaw and the end block
-upright as used; Tux, the fork and the fish flat; the nut and the screw with the thread
+upright as used; Tux, the fork and the gnu flat; the nut and the screw with the thread
 axis vertical.
 """
 
@@ -69,6 +69,8 @@ THREAD_DEPTH = (PITCH - 2 * THREAD_FLAT) / (2 * tan(radians(THREAD_FLANK)))  # 1
 THREAD_GAUGE = (0.15, 0.25, 0.35, 0.45)  # radial clearances of the four coupon holes
 CLR_THREAD = THREAD_GAUGE[1]
 CLR_BORE = 0.40  # radial, plain holes the screw passes through
+SHANK_R = THREAD_D / 2 + 0.1  # plain shank next to a thread: 0.1 mm wider, or the
+# thread's square end overhangs
 MIN_TURNS = 3  # thread engagement at every jaw position, in turns
 
 # --- nut: a square insert, printed with its axis vertical --------------------------------
@@ -99,11 +101,12 @@ FORK_W = 16.0
 CLR_FORK = 0.20  # per side, fork in its slot and around the neck
 THREAD_GAP = 0.6  # the thread starts this far behind the jaw's back face
 
-# --- travel and the fish knob --------------------------------------------------------------
+# --- travel and the gnu knob ---------------------------------------------------------------
 OPEN_MAX = 35.0  # jaw opening, from the white belly to the jaw face
-KNOB_T = layers(30)  # 6.0 mm fish, printed flat; the screw stands on it
-KNOB_GAP = 2.0  # fish to the end block at the closed position
-KNOB_R = Z_AXIS - 2.0  # the fish turns within this radius, clear of the desk
+KNOB_T = layers(30)  # 6.0 mm gnu head, printed flat; the screw stands on it
+KNOB_GAP = 2.0  # knob to the end block at the closed position
+KNOB_R = Z_AXIS - 2.0  # the knobs of all three screws turn within this radius; the
+# vise's knob stays clear of the desk
 
 # --- layout along x (assembly), derived ----------------------------------------------------
 X_TUX = BACK_T  # Tux's back
