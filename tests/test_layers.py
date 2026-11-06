@@ -20,6 +20,9 @@ from conftest import MODELS, all_parts, all_plates, colour_parts, export_module,
 
 PARTS = all_parts()
 PLATES = all_plates()
+# The width checks work on sections of a mesh tessellated to 0.02 mm, so a curved wall
+# can come out up to that much thinner. The limits get this much tolerance and no more.
+SECTION_TOL = 0.03
 
 
 def test_profile_assumptions():
@@ -110,13 +113,25 @@ def _band_sections(model, name):
 
 @pytest.mark.parametrize("model,name", PARTS)
 def test_nothing_thinner_than_two_lines(model, name):
-    # a disk a little narrower than 2 lines must reach all the material; corners and
-    # tips lose a little, so pieces under 0.25 mm2 are ignored
+    # a disk 2 lines wide must reach all the material; corners and tips lose a little, so
+    # pieces under 0.25 mm2 are ignored
     for (colour, z0, z1), polys in _band_sections(model, name):
-        assert thin_material(polys, 0.95 * lines(2)) == [], (colour, z0, z1)
+        assert thin_material(polys, lines(2) - SECTION_TOL) == [], (colour, z0, z1)
 
 
 @pytest.mark.parametrize("model,name", PARTS)
 def test_no_gap_narrower_than_one_line(model, name):
     for (colour, z0, z1), polys in _band_sections(model, name):
-        assert narrow_gaps(polys, 0.9 * LINE_W) == [], (colour, z0, z1)
+        assert narrow_gaps(polys, LINE_W - SECTION_TOL) == [], (colour, z0, z1)
+
+
+def test_width_checks_catch_what_they_should():
+    """The morphological checks themselves: a 0.80 mm wall and a 0.40 mm slot fail, a
+    2-line wall and a 0.5 mm slot pass."""
+    from shapely.geometry import box
+
+    assert thin_material([box(0, 0, 10, 0.80)], lines(2) - SECTION_TOL)
+    assert not thin_material([box(0, 0, 10, lines(2))], lines(2) - SECTION_TOL)
+    assert narrow_gaps([box(0, 0, 10, 3).difference(box(2, 1.3, 8, 1.7))], LINE_W - SECTION_TOL)
+    assert not narrow_gaps([box(0, 0, 10, 3).difference(box(2, 1.25, 8, 1.75))],
+                           LINE_W - SECTION_TOL)

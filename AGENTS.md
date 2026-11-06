@@ -109,6 +109,9 @@ uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip
   `lines(2)` is 0.857 mm. The minimum is 2 lines.
 - Gaps and grooves are at least `LINE_W` wide.
 - Every layer rests on the layer below (no islands). Overhangs are 45° or steeper.
+- The width tests use an exact morphological opening of each section
+  (`shapely` `buffer(-r).buffer(r)`), with 0.03 mm of tolerance for the mesh. A raster
+  version could not tell 0.80 mm from 2 lines (0.857 mm).
 
 ## Colours (M600 on a single extruder)
 

@@ -78,69 +78,37 @@ def overhangs(part: Part, min_angle: float = 45.0, samples: int = 7) -> list[tup
     return sorted(found.items())
 
 
-def _raster(polys, bounds, px_per_mm: float) -> np.ndarray:
-    """Rasterise shapely polygons (with holes) into a boolean mask over `bounds`."""
-    from PIL import Image, ImageDraw
-
-    x0, y0, x1, y1 = bounds
-    w, h = int((x1 - x0) * px_per_mm) + 1, int((y1 - y0) * px_per_mm) + 1
-    img = Image.new("1", (w, h), 0)
-    draw = ImageDraw.Draw(img)
-
-    def pts(ring):
-        return [((x - x0) * px_per_mm, (y - y0) * px_per_mm) for x, y in ring.coords]
-
-    for poly in sorted(polys, key=lambda p: -p.area):
-        draw.polygon(pts(poly.exterior), fill=1)
-        for ring in poly.interiors:
-            draw.polygon(pts(ring), fill=0)
-    return np.array(img, dtype=bool)
+def _too_narrow(region, width: float, min_area: float) -> list[float]:
+    """Areas (mm2) of the parts of `region` that a disk of `width` cannot reach
+    (morphological opening, exact on the polygons), ignoring pieces smaller than
+    `min_area` (the rounded-off tips of convex corners)."""
+    r = width / 2
+    opened = region.buffer(-r, quad_segs=32).buffer(r, quad_segs=32)
+    rest = region.difference(opened)
+    pieces = getattr(rest, "geoms", [rest])
+    return sorted(round(p.area, 3) for p in pieces if p.area > min_area)
 
 
-def _disk(diameter: float, px_per_mm: float) -> np.ndarray:
-    r = max(1, int((diameter * px_per_mm - 1) / 2))  # the disk spans 2r+1 <= diameter px
-    yy, xx = np.mgrid[-r:r + 1, -r:r + 1]
-    return xx**2 + yy**2 <= r * r
-
-
-def _thin_blobs(mask: np.ndarray, diameter: float, px_per_mm: float,
-                min_area: float) -> list[float]:
-    """Areas (mm2) of the connected pieces of `mask` that a disk of `diameter` cannot reach
-    (morphological opening), ignoring pieces smaller than `min_area` (corners)."""
-    from scipy import ndimage
-
-    opened = ndimage.binary_opening(mask, structure=_disk(diameter, px_per_mm))
-    labels, n = ndimage.label(mask & ~opened)
-    if not n:
-        return []
-    areas = ndimage.sum(np.ones_like(mask, dtype=float), labels, range(1, n + 1))
-    areas = areas / px_per_mm**2
-    return sorted(round(float(a), 3) for a in areas if a > min_area)
-
-
-def thin_material(polys, min_width: float, px_per_mm: float = 40.0,
-                  min_area: float = 0.25) -> list[float]:
+def thin_material(polys, min_width: float, min_area: float = 0.25) -> list[float]:
     """Pieces of material narrower than `min_width` (areas in mm2; empty = fine)."""
     from shapely.ops import unary_union
 
     if not polys:
         return []
-    b = unary_union(polys).bounds
-    bounds = (b[0] - 2, b[1] - 2, b[2] + 2, b[3] + 2)
-    return _thin_blobs(_raster(polys, bounds, px_per_mm), min_width, px_per_mm, min_area)
+    return _too_narrow(unary_union(polys), min_width, min_area)
 
 
-def narrow_gaps(polys, min_gap: float, px_per_mm: float = 40.0,
-                min_area: float = 0.1) -> list[float]:
+def narrow_gaps(polys, min_gap: float, min_area: float = 0.1) -> list[float]:
     """Pieces of empty space (slots, holes, notches) narrower than `min_gap`."""
+    from shapely.geometry import box
     from shapely.ops import unary_union
 
     if not polys:
         return []
-    b = unary_union(polys).bounds
-    bounds = (b[0] - 2, b[1] - 2, b[2] + 2, b[3] + 2)
-    empty = ~_raster(polys, bounds, px_per_mm)
-    return _thin_blobs(empty, min_gap, px_per_mm, min_area)
+    solid = unary_union(polys)
+    x0, y0, x1, y1 = solid.bounds
+    return _too_narrow(box(x0 - 2, y0 - 2, x1 + 2, y1 + 2).difference(solid), min_gap,
+                       min_area)
 
 
 def colour_bands(coloured: list[tuple[Part, str]]) -> list[tuple[str, float, float]]:
