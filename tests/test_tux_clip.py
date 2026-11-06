@@ -154,8 +154,8 @@ def test_print_time_budget(size):
 
     PrusaSlicer 2.9.6 estimates, model volume -> time: 6.9 cm3 -> 15 min 54 s,
     11.9 cm3 -> 23 min 29 s, 15.9 cm3 -> 29 min 19 s, 16.2 cm3 -> 29 min 26 s,
-    17.2 cm3 -> 30 min 56 s, 18.1 cm3 -> 32 min 8 s. About 6.1 min plus 1.46 min per cm3 (a little pessimistic
-    for the small sizes), so 30 min allows about 16.4 cm3."""
+    17.2 cm3 -> 30 min 56 s, 18.1 cm3 -> 32 min 8 s. About 6.1 min plus 1.46 min per cm3
+    (a little pessimistic for the small sizes), so 30 min allows about 16.4 cm3."""
     minutes = 6.1 + 1.46 * make_clip(size).volume / 1000
     assert minutes <= 30.0
 

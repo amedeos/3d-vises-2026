@@ -44,8 +44,8 @@ def test_colours_are_stacked_along_z(model, name):
     boundary is a layer boundary."""
     bands = colour_bands(colour_parts(model)[name])
     assert bands[0][1] == pytest.approx(0, abs=1e-3)
-    for colour, z0, z1 in bands:
-        assert on_grid(z0) and on_grid(z1), (colour, z0, z1)
+    for colour, z0, z1 in bands[1:]:  # the top of the last band may be a curve
+        assert on_grid(z0), (colour, z0, z1)
     for (c0, _, top), (c1, bottom, _) in zip(bands, bands[1:]):
         assert c0 != c1
         assert bottom == pytest.approx(top, abs=1e-3), f"{c0} ends at {top}, {c1} starts at {bottom}"
@@ -104,25 +104,46 @@ def test_declared_widths(model):
         assert width >= LINE_W - 1e-9, (gap, width)
 
 
-def _band_sections(model, name):
-    """One cross-section in the middle of each colour band."""
-    bands = colour_bands(colour_parts(model)[name])
-    heights = [(z0 + z1) / 2 for _, z0, z1 in bands]
-    return zip(bands, layer_sections(parts(model)[name], heights))
+WIDTH_STEP = 1.0  # mm between the cross-sections of the width checks
+
+
+def _width_sections(model, name):
+    """Cross-sections for the width checks: one every WIDTH_STEP inside each colour band
+    (one in the middle of a thinner band), with the model's declared thread zones taken
+    out (a horizontal slice of a thread is not a wall; see `<model>.export.thread_zones`)."""
+    from shapely.geometry import Point
+    from shapely.ops import unary_union
+
+    mod = export_module(model)
+    zones = mod.thread_zones().get(name, []) if hasattr(mod, "thread_zones") else []
+    heights = []
+    for band in colour_bands(colour_parts(model)[name]):
+        _, z0, z1 = band
+        n = max(1, int((z1 - z0) / WIDTH_STEP))
+        heights += [(band, z0 + (k + 0.5) * (z1 - z0) / n) for k in range(n)]
+    sections = layer_sections(parts(model)[name], [z for _, z in heights])
+    for (band, z), polys in zip(heights, sections):
+        masks = [Point(x, y).buffer(r, quad_segs=32) for x, y, r, za, zb in zones
+                 if za <= z <= zb]
+        if masks:
+            cut = unary_union(masks)
+            polys = [p.difference(cut) for p in polys]
+            polys = [g for p in polys for g in getattr(p, "geoms", [p]) if not g.is_empty]
+        yield band, z, polys
 
 
 @pytest.mark.parametrize("model,name", PARTS)
 def test_nothing_thinner_than_two_lines(model, name):
     # a disk 2 lines wide must reach all the material; corners and tips lose a little, so
     # pieces under 0.25 mm2 are ignored
-    for (colour, z0, z1), polys in _band_sections(model, name):
-        assert thin_material(polys, lines(2) - SECTION_TOL) == [], (colour, z0, z1)
+    for band, z, polys in _width_sections(model, name):
+        assert thin_material(polys, lines(2) - SECTION_TOL) == [], (band, round(z, 2))
 
 
 @pytest.mark.parametrize("model,name", PARTS)
 def test_no_gap_narrower_than_one_line(model, name):
-    for (colour, z0, z1), polys in _band_sections(model, name):
-        assert narrow_gaps(polys, LINE_W - SECTION_TOL) == [], (colour, z0, z1)
+    for band, z, polys in _width_sections(model, name):
+        assert narrow_gaps(polys, LINE_W - SECTION_TOL) == [], (band, round(z, 2))
 
 
 def test_width_checks_catch_what_they_should():

@@ -7,7 +7,7 @@ THIN_FEATURES and GAPS. Add a model to MODELS when it exists.
 import importlib
 from functools import cache
 
-MODELS = ["tux_clip"]
+MODELS = ["tux_clip", "tux_vise"]
 
 
 @cache
