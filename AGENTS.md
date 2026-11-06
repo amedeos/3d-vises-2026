@@ -12,7 +12,8 @@ Both models share one code base.
    Squeeze his shoulders and the flippers open. Sizes S, M and L, a desk version (Tux lies
    on an ice floe and holds a card upright) and a flexure coupon. Done: see README.
 2. **Tux Vise:** a small desk vise. Tux's belly is the fixed jaw, a flipper is the moving
-   jaw, a printed trapezoidal screw drives it and the knob is a fish. (Phase 3: not started.)
+   jaw, a printed trapezoidal screw drives it and the knob is a fish. Optional desk foot and
+   a thread coupon. Done: see README.
 
 - **Deadline:** entries close on 22 Nov 2026, 23:59 UTC.
 - **Goal:** downloads and likes, not the prize. Every model must be recognisable at first
@@ -44,9 +45,13 @@ uv run python -m tux_clip.model            # flexure numbers per size (opening, 
 uv run python -m tux_clip.export           # STLs -> out/stl/tux_clip, 3MF plates -> out/3mf/tux_clip
 uv run python -m tux_clip.slicer           # optional, PrusaSlicer CLI: times, checks, projects
 uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip (add --gif)
+uv run python -m tux_vise.kinematics       # turns of the fish -> opening, thread engagement
+uv run python -m tux_vise.export           # out/stl/tux_vise, out/3mf/tux_vise
+uv run python -m tux_vise.slicer           # optional
+uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
 ```
 
-- The full test suite takes about 30 s.
+- The full test suite takes about 45 s.
 
 ## Layout
 
@@ -62,6 +67,11 @@ uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip
 | `src/tux_clip/params.py` | **Single source of truth** for every Tux Clip size and clearance |
 | `src/tux_clip/model.py` | Clip parts per colour, desk version, coupon, flexure mechanics |
 | `src/tux_clip/export.py`, `render.py`, `slicer.py` | Entry points (`python -m tux_clip.<name>`) |
+| `src/tux_vise/params.py` | **Single source of truth** for the vise: layout along x, thread, clearances, foot |
+| `src/tux_vise/thread.py` | The 45-degree trapezoidal thread (bd_warehouse `Thread`): screw, nut bore, threaded hole |
+| `src/tux_vise/model.py` | Every vise part in its print pose, `use_location()` / `assembly()`, foot, coupon |
+| `src/tux_vise/kinematics.py` | Turns -> opening, thread engagement (from the geometry) |
+| `src/tux_vise/export.py`, `render.py`, `slicer.py` | Entry points (`python -m tux_vise.<name>`). `export.thread_zones()` lists the threads the width tests skip. |
 | `tests/conftest.py` | `MODELS`: the model packages the tests run on. Each `<model>.export` provides `printable_parts()`, `colour_parts()`, `plates()`, `PLANNED_M600`, `THIN_FEATURES`, `GAPS`. |
 | `tests/` | pytest suite. Keep it green. |
 
@@ -100,6 +110,47 @@ uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip
 - Print time grows about 6.1 min + 1.46 min per cm3 of model (PrusaSlicer 2.9.6, flat
   parts). `test_print_time_budget` uses this to keep every clip under 30 min. The L size is
   75 mm with an 11 mm opening for that reason; 13 mm needs an 85 mm Tux (about 36 min).
+
+## Tux Vise mechanism (do not break it)
+
+- **Frames.** `params.py` describes the vise frame: x along the screw from Tux to the fish,
+  z up, the bottom of the base on z = 0. Every part is *built in its print pose* (that is
+  what `printable_parts()` and the layer tests use) and `use_location(name, opening)`
+  moves it into the vise. `assembly(opening)` places them all.
+- **Thread.** Build every thread with `thread.py`, never directly with bd_warehouse: the
+  screw, the vise nut, the foot nut and the four coupon holes must share one profile, so
+  the coupon tells the truth. The flanks are 45 degrees (ISO 2904 has 15): that is what
+  lets the thread print upright under the 45-degree overhang rule. Crest flat and root
+  gap are one line. The clearance (`CLR_THREAD`, radial) is given to the nut only, through
+  bd_warehouse's `manufacturing_compensation`; it is one of the `THREAD_GAUGE` values.
+- **Clean thread solids.** With bd_warehouse's default interference (0.2) the fuse leaves
+  zero-area faces along the root, which the overhang check reads as flat overhangs.
+  `thread.py` uses 0.1 and a core 0.01 mm proud of the root. A plain shank next to a
+  thread's square end must be 0.1 mm wider than the thread, or the end overhangs.
+- **Screw and fork.** The screw's head sits in a chamber in the jaw; the fork, dropped into
+  a slot from the top, catches the neck behind it. Pushing, the tip presses the chamber
+  floor; pulling, the 45-degree cone under the head presses the fork. `head_play()` is
+  computed from that geometry; the engagement is checked in both positions.
+- **Stops.** Fully open, the jaw's back meets the end block (`X_END`); closed, its face meets
+  the white belly (`X_BELLY` = opening 0). The beak and feet stand `T_ORANGE` proud: the
+  jaw's top stays 1.5 mm under the beak (`jaw_top()`) and its lower front steps back over
+  the feet.
+- **45-degree roofs.** Horizontal holes in upright parts are teardrops
+  (`common.shapes.teardrop`). The jaw's rail slot has a 45-degree gable instead of a flat
+  ceiling. Where two 45-degree roofs cross, the line where they meet is flatter than 45
+  degrees: PrusaSlicer adds support there, while `printability.overhangs` (face normals)
+  does not see it. Keep roofs from crossing (the feet recess stays above the slot roof).
+- **Width tests on 3D parts.** `test_layers` takes a section every 1 mm in each colour band
+  and skips the discs that `export.thread_zones()` declares: a horizontal slice of a
+  thread cuts each tooth into a crescent that tapers to nothing. The tooth itself is
+  2.55 mm wide at its root.
+- **Collisions.** Never intersect the helical solids (slow and fragile). The tests check the
+  screw as plain cylinders (`screw_envelope`) against every part but the nut, and the
+  screw/nut fit on the profile. The physical fit is the coupon's job.
+- **Plates.** A plate without M600 prints in one filament, so parts that share a plate share
+  a colour (`export.COLOUR`). Only Tux changes colour.
+- **Print time.** Tall thin parts (the screws, the coupon stub) are slow because of the
+  slicer's minimum layer time, not because of their volume.
 
 ## Layers and lines (0.4 mm nozzle, 0.2 mm layers)
 
