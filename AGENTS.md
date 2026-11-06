@@ -156,13 +156,16 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
 - **Print time.** Tall thin parts (the screws, the coupon stub) are slow because of the
   slicer's minimum layer time, not because of their volume.
 - **Gnu knob.** All three screws (vise, foot, coupon) stand on the same gnu head,
-  `gnu_sketch(KNOB_R)`. It is our own drawing, not the GNU logo (a trademark; its fine hair
-  would be thinner than two lines). Its outline is built in shapely, because build123d's
-  2D offsets fail on it: a closing (notches under a line) and an opening (tips of at least
-  two lines), so it passes the width tests by construction. The knob carries the plain
-  shank (`SHANK_R`): it covers the shank's disc, and the eyes and nostrils (holes) stay
-  outside it, or the shank's bottom would hang over a hole. At a smaller radius they do
-  not fit: `gnu_sketch` raises an error. `make_screw` turns the gnu over so that its horns
+  `gnu_sketch(GNU_R)`. `GNU_R` is its own parameter, so the foot and the coupon do not
+  depend on the vise layout; the vise's knob must still fit within `KNOB_R` (a test checks
+  it). It is our own drawing, not the GNU logo (a trademark; its fine hair would be
+  thinner than two lines). Its outline is built in shapely, because build123d's 2D offsets
+  fail on it: a closing (notches under a line) and an opening (tips of at least two
+  lines), so it passes the width tests by construction. The knob carries the plain shank
+  (`SHANK_R`): it covers the shank's disc, and the eyes and nostrils (holes) stay outside
+  it, or the shank's bottom would hang over a hole. Each hole also keeps two lines of wall
+  to the outline. Below about 23.2 mm the nostrils do not fit: `gnu_sketch` raises an
+  error. `make_screw` turns the gnu over so that its horns
   point up at every whole turn from fully open; the renders use those openings
   (`render.upright`).
 

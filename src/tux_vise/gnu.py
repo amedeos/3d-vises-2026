@@ -116,5 +116,8 @@ def gnu_sketch(radius: float) -> Sketch:
         # a hole under the shank would leave the shank's bottom face hanging in the air
         if hypot(x, y) - r < P.SHANK_R + P.LINE_W:
             raise ValueError(f"knob radius {radius}: a hole runs under the screw's shank")
+        # and it keeps a wall of at least two lines to the outline
+        if not shape.contains(Point(x, y).buffer(r + P.lines(2), quad_segs=32)):
+            raise ValueError(f"knob radius {radius}: a hole has less than two lines of wall")
         knob -= Pos(x, y) * Circle(r)
     return knob

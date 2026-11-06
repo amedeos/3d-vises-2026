@@ -105,8 +105,9 @@ def test_knob_clears_the_desk_and_the_end_block():
     the end block when the jaw is closed."""
     from build123d import Circle
 
-    gnu = gnu_sketch(P.KNOB_R)
-    assert (gnu - Circle(P.KNOB_R + 1e-3)).area == pytest.approx(0, abs=1e-3)
+    gnu = gnu_sketch(P.GNU_R)
+    assert P.GNU_R <= P.KNOB_R
+    assert (gnu - Circle(P.GNU_R + 1e-3)).area == pytest.approx(0, abs=1e-3)
     assert P.KNOB_R < P.Z_AXIS
     st = screw_stations()
     assert tip_x(0.0) + st["knob"] >= P.BASE_L + P.KNOB_GAP - 1e-9
@@ -119,15 +120,15 @@ def test_gnu_knob_carries_the_shank():
     holes (at least one line) with at least two lines of wall to the outline."""
     from build123d import Circle, Pos
 
-    gnu = gnu_sketch(P.KNOB_R)
+    gnu = gnu_sketch(P.GNU_R)
     assert (Circle(P.SHANK_R) - gnu).area == pytest.approx(0, abs=1e-3)
     assert len(gnu.faces()) == 1
-    for x, y, r in holes(P.KNOB_R):
+    for x, y, r in holes(P.GNU_R):
         assert (x * x + y * y) ** 0.5 - r >= P.SHANK_R + LINE_W
-        assert 2 * r >= LINE_W
+        assert 2 * r >= lines(4)  # GAPS in tux_vise.export
         wall = Pos(x, y) * Circle(r + lines(2)) - Pos(x, y) * Circle(r + 1e-3)
         assert (wall - gnu).area == pytest.approx(0, abs=1e-3)  # the wall around the hole
-    assert len(gnu.faces()[0].inner_wires()) == len(holes(P.KNOB_R))
+    assert len(gnu.faces()[0].inner_wires()) == len(holes(P.GNU_R))
 
 # --- stops -----------------------------------------------------------------------------------
 
@@ -181,7 +182,7 @@ def screw_envelope(opening: float, play: float = 0.0) -> Part:
             + cyl(P.NECK_D / 2, st["head"], st["thread0"])
             + cyl(P.THREAD_D / 2, st["thread0"], st["thread1"])
             + cyl(P.SHANK_R, st["thread1"], st["knob"])
-            + cyl(P.KNOB_R, st["knob"], st["length"]))
+            + cyl(P.GNU_R, st["knob"], st["length"]))
 
 
 @pytest.mark.parametrize("opening", OPENINGS)

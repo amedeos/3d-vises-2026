@@ -105,8 +105,11 @@ THREAD_GAP = 0.6  # the thread starts this far behind the jaw's back face
 OPEN_MAX = 35.0  # jaw opening, from the white belly to the jaw face
 KNOB_T = layers(30)  # 6.0 mm gnu head, printed flat; the screw stands on it
 KNOB_GAP = 2.0  # knob to the end block at the closed position
-KNOB_R = Z_AXIS - 2.0  # the knobs of all three screws turn within this radius; the
-# vise's knob stays clear of the desk
+KNOB_R = Z_AXIS - 2.0  # the vise's knob must turn within this radius, clear of the desk
+# The gnu knob of all three screws (vise, foot, coupon) turns within GNU_R. Its own value,
+# so that the foot and the coupon do not depend on the vise layout. Below about 23.2 mm the
+# nostrils would run under the shank and gnu_sketch raises; the tests check GNU_R <= KNOB_R.
+GNU_R = 24.0
 
 # --- layout along x (assembly), derived ----------------------------------------------------
 X_TUX = BACK_T  # Tux's back

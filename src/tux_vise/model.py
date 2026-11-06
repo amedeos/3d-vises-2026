@@ -296,7 +296,7 @@ def make_screw() -> Part:
     z = lambda s: length - s  # noqa: E731  (screw station -> print height)
     # use_location turns the knob's +y downwards: turned over, the gnu's horns point up
     # at every whole turn from fully open
-    knob = extrude(Rot(0, 0, 180) * gnu_sketch(P.KNOB_R), P.KNOB_T, dir=(0, 0, 1))
+    knob = extrude(Rot(0, 0, 180) * gnu_sketch(P.GNU_R), P.KNOB_T, dir=(0, 0, 1))
     # 0.1 mm wider than the thread, so the thread's square end sits on it
     shank = Pos(0, 0, P.KNOB_T) * Cylinder(P.SHANK_R, z(st["thread1"]) - P.KNOB_T,
                                            align=(Align.CENTER, Align.CENTER, Align.MIN))
@@ -391,7 +391,7 @@ def make_gauge() -> Part:
 @cache
 def make_stub() -> Part:
     """20 mm of the real screw thread on a gnu knob, to try in the gauge's holes."""
-    knob = extrude(gnu_sketch(P.KNOB_R), P.KNOB_T, dir=(0, 0, 1))
+    knob = extrude(gnu_sketch(P.GNU_R), P.KNOB_T, dir=(0, 0, 1))
     base = Pos(0, 0, P.KNOB_T) * Cylinder(P.SHANK_R, P.LAYER,
                                           align=(Align.CENTER, Align.CENTER, Align.MIN))
     stub = knob + base + Pos(0, 0, P.KNOB_T + P.LAYER) * screw_thread(P.GAUGE_STUB)
@@ -486,7 +486,7 @@ def make_foot_screw() -> Part:
     """The foot screw standing on its gnu knob: thread at the top, tip flat."""
     st = foot_screw_stations()
     length = st["length"]
-    knob = extrude(gnu_sketch(P.KNOB_R), P.KNOB_T, dir=(0, 0, 1))
+    knob = extrude(gnu_sketch(P.GNU_R), P.KNOB_T, dir=(0, 0, 1))
     shank = Pos(0, 0, P.KNOB_T) * Cylinder(P.SHANK_R, length - st["thread1"] - P.KNOB_T,
                                            align=(Align.CENTER, Align.CENTER, Align.MIN))
     thread = Pos(0, 0, length - st["thread1"]) * screw_thread(st["thread1"])
