@@ -414,3 +414,112 @@ def make_stub() -> Part:
     stub = fish + base + Pos(0, 0, P.KNOB_T + P.LAYER) * screw_thread(P.GAUGE_STUB)
     stub.label = "coupon_thread_stub"
     return stub
+
+
+# --- desk foot ------------------------------------------------------------------------------
+# Built in the vise frame (x along the base, the channel floor at z = 0, the desk on the +y
+# side of the spine), then turned onto its side for printing.
+
+def _channel_half(z: float) -> float:
+    """Half-width of the channel at height z: the base's bevelled bottom grown by
+    CLR_SLIDE (measured at right angles)."""
+    c = P.CLR_SLIDE
+    return max(P.BASE_W / 2 + c * sqrt(2) - z, P.BASE_W / 2 - P.BEVEL + c)
+
+
+def foot_layout() -> dict[str, float]:
+    """y and z of the foot's features (vise frame; channel floor at z = 0)."""
+    lip_out = _channel_half(0.0) + P.LIP_W
+    spine1 = -lip_out  # the spine's inner face: it touches the desk edge
+    nut_wall = P.NUT_WALL
+    bottom1 = -(P.T_ARM + P.DESK_MAX)  # top of the bottom arm
+    nut_h = P.NUT_L + 2 * P.CLR_FIT
+    bottom0 = bottom1 - P.snap_up(nut_h + 2 * nut_wall)
+    screw_y = spine1 + nut_wall + P.NUT_W / 2 + P.CLR_FIT
+    return {"lip_out": lip_out, "spine0": spine1 - P.SPINE_T, "spine1": spine1,
+            "bottom0": bottom0, "bottom1": bottom1, "nut0": bottom0 + nut_wall,
+            "nut1": bottom0 + nut_wall + nut_h, "screw_y": screw_y,
+            "arm_end": screw_y + P.NUT_W / 2 + P.CLR_FIT + nut_wall}
+
+
+def _bore_z(radius: float, x: float, y: float, z0: float, z1: float) -> Part:
+    """Vertical hole (vise frame) whose roof points to +x: horizontal when the foot lies
+    on its side for printing."""
+    plane = Plane(origin=(x, y, z0), x_dir=(0, -1, 0), z_dir=(0, 0, 1))
+    return extrude(plane * teardrop(radius), z1 - z0, dir=(0, 0, 1))
+
+
+@cache
+def foot_in_place() -> Part:
+    """The desk foot in the vise frame (channel floor at z = 0, x from -FOOT_CAP)."""
+    f = foot_layout()
+    ch0, lip_top = _channel_half(0.0), P.LIP_TOP
+    profile = _poly(
+        (f["spine0"], f["bottom0"]), (f["arm_end"], f["bottom0"]),
+        (f["arm_end"], f["bottom1"]), (f["spine1"], f["bottom1"]),
+        (f["spine1"], -P.T_ARM), (f["lip_out"], -P.T_ARM), (f["lip_out"], lip_top),
+        (f["spine0"], lip_top))
+    side = _channel_half(lip_top)  # the base's vertical side, grown
+    knee = ch0 - side  # where the grown bevel meets it (45 degrees: rise = run)
+    channel = _poly((-ch0, 0), (ch0, 0), (side, knee), (side, lip_top + 1),
+                    (-side, lip_top + 1), (-side, knee))
+    nut = _poly((f["screw_y"] - P.NUT_W / 2 - P.CLR_FIT, f["nut0"]),
+                (f["screw_y"] + P.NUT_W / 2 + P.CLR_FIT, f["nut0"]),
+                (f["screw_y"] + P.NUT_W / 2 + P.CLR_FIT, f["nut1"]),
+                (f["screw_y"] - P.NUT_W / 2 - P.CLR_FIT, f["nut1"]))
+    body = _yz(profile - channel - nut, 0, P.FOOT_L)
+    cap = _yz(profile - nut, -P.FOOT_CAP, 0)  # the base stops against it
+    foot = body + cap
+    foot -= _bore_z(P.THREAD_D / 2 + P.CLR_BORE, P.FOOT_L / 2, f["screw_y"],
+                    f["bottom0"] - 1, f["bottom1"] + 1)
+    return foot
+
+
+def foot_print_location() -> Location:
+    """From the vise frame to the print pose: on its side, x up."""
+    return _standing(0, 0, 0).location.inverse()
+
+
+@cache
+def make_foot() -> Part:
+    foot = foot_print_location() * foot_in_place()
+    bb = foot.bounding_box()
+    foot = Pos(-bb.min.X, -bb.min.Y, -bb.min.Z) * foot
+    foot.label = "tux_vise_foot"
+    return foot
+
+
+def foot_screw_stations() -> dict[str, float]:
+    """Distances along the foot screw from its tip (s = 0, against the desk)."""
+    f = foot_layout()
+    tip_thin = -(P.T_ARM + P.DESK_MIN)  # the screw at its highest
+    thread1 = P.snap_up(tip_thin - (f["nut0"] - P.CLR_FIT) + 0.6)  # covers the nut
+    knob = P.snap_up(tip_thin - f["bottom0"] + 1.0)  # knob 1 mm under the arm
+    return {"thread1": thread1, "knob": knob, "length": knob + P.KNOB_T}
+
+
+@cache
+def make_foot_screw() -> Part:
+    """The foot screw standing on its small fish: thread at the top, tip flat."""
+    st = foot_screw_stations()
+    length = st["length"]
+    fish = extrude(fish_sketch(18.0), P.KNOB_T, dir=(0, 0, 1))
+    shank = Pos(0, 0, P.KNOB_T) * Cylinder(P.THREAD_D / 2 + 0.1, length - st["thread1"] - P.KNOB_T,
+                                           align=(Align.CENTER, Align.CENTER, Align.MIN))
+    thread = Pos(0, 0, length - st["thread1"]) * screw_thread(st["thread1"])
+    screw = fish + shank + thread
+    screw.label = "tux_vise_foot_screw"
+    return screw
+
+
+def foot_locations(desk: float) -> dict[str, Location]:
+    """Where the foot, its nut and its screw go for a desk `desk` mm thick (vise frame,
+    base on the foot: the base's bottom at z = 0)."""
+    f = foot_layout()
+    tip = -(P.T_ARM + desk)
+    length = foot_screw_stations()["length"]
+    return {
+        "foot": foot_print_location().inverse() * Location(),
+        "foot_nut": Location((P.FOOT_L / 2, f["screw_y"], f["nut0"] + P.CLR_FIT)),
+        "foot_screw": Location((P.FOOT_L / 2, f["screw_y"], tip - length)),
+    }

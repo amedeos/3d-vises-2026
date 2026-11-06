@@ -213,3 +213,46 @@ def test_nut_is_captive():
 
 def test_vise_length():
     assert 80.0 <= P.BASE_L <= 90.0
+
+
+# --- desk foot ------------------------------------------------------------------------------
+
+DESKS = [P.DESK_MIN, (P.DESK_MIN + P.DESK_MAX) / 2, P.DESK_MAX]
+
+
+@pytest.mark.parametrize("desk", DESKS)
+def test_foot_screw_engagement(desk):
+    """The foot screw keeps MIN_TURNS in its nut for every desk in the range, and its plain
+    shank never enters the nut."""
+    from tux_vise.model import foot_layout, foot_screw_stations
+
+    f, st = foot_layout(), foot_screw_stations()
+    tip = -(P.T_ARM + desk)
+    nut0, nut1 = f["nut0"] + P.CLR_FIT, f["nut0"] + P.CLR_FIT + P.NUT_L
+    thread0, thread1 = tip - st["thread1"], tip
+    engaged = max(0.0, min(nut1, thread1) - max(nut0, thread0)) / P.PITCH
+    assert engaged >= P.MIN_TURNS
+    assert tip - st["thread1"] < nut0  # the shank starts below the nut
+    assert tip - st["knob"] <= f["bottom0"] - 0.5  # the fish stays under the arm
+
+
+def test_base_is_held_by_the_foot():
+    """The base slides into the channel; the lips cover its bevels, so it cannot lift out,
+    and nothing overlaps."""
+    from tux_vise.model import (_channel_half, foot_in_place, foot_locations,
+                                foot_screw_stations, make_foot_screw, make_nut)
+
+    assert _channel_half(P.LIP_TOP) < P.BASE_W / 2  # the lips reach over the bevel
+    base, foot = make_base(), foot_in_place()
+    assert _volume(base, foot) < 0.05
+    assert _volume(Pos(0, 0, 0.5) * base, foot) > 0.1  # lifting it hits the lips
+    for desk in DESKS:
+        loc = foot_locations(desk)
+        nut = loc["foot_nut"] * make_nut()
+        screw = loc["foot_screw"] * make_foot_screw()
+        assert _volume(nut, foot) < 0.05
+        length = foot_screw_stations()["length"]
+        envelope = loc["foot_screw"] * (Pos(0, 0, P.KNOB_T) * Cylinder(
+            P.THREAD_D / 2 + 0.1, length - P.KNOB_T, align=(Align.CENTER, Align.CENTER, Align.MIN)))
+        assert _volume(envelope, foot) < 0.01, desk
+        assert screw.bounding_box().max.Z == pytest.approx(-(P.T_ARM + desk))

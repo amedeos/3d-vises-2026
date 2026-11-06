@@ -16,6 +16,8 @@ from common.export import Change, Plates, centred, export_model, row
 from . import params as P
 from .model import (
     make_base,
+    make_foot,
+    make_foot_screw,
     make_fork,
     make_gauge,
     make_jaw,
@@ -25,6 +27,7 @@ from .model import (
     make_tux,
     gauge_holes,
     screw_stations,
+    foot_screw_stations,
     tux_colours,
 )
 
@@ -42,6 +45,7 @@ GAPS = {"fish eye": P.lines(4), "fork opening": P.NECK_D + 2 * P.CLR_FORK,
 # parts that share a plate share a colour.
 COLOUR = {"tux_vise_tux": "black", "tux_vise_base": "blue", "tux_vise_jaw": "black",
           "tux_vise_fork": "black", "tux_vise_nut": "black", "tux_vise_screw": "orange",
+          "tux_vise_foot": "blue", "tux_vise_foot_screw": "blue", "tux_vise_foot_nut": "blue",
           "coupon_thread_gauge": "orange", "coupon_thread_stub": "orange"}
 
 
@@ -63,8 +67,12 @@ def thread_zones() -> dict[str, list[tuple[float, float, float, float, float]]]:
              for clr, (x, y) in zip(P.THREAD_GAUGE, gauge_holes())]
     return {
         "tux_vise_nut": [_thread_zone(nut_r, -1, P.NUT_L + 1)],
+        "tux_vise_foot_nut": [_thread_zone(nut_r, -1, P.NUT_L + 1)],
         "tux_vise_screw": [_thread_zone(P.THREAD_D / 2 + 0.01, length - st["thread1"],
                                         length - st["thread0"] + 1)],
+        "tux_vise_foot_screw": [_thread_zone(P.THREAD_D / 2 + 0.01,
+                                             foot_screw_stations()["length"]
+                                             - foot_screw_stations()["thread1"], 1e3)],
         "coupon_thread_gauge": gauge,
         "coupon_thread_stub": [_thread_zone(P.THREAD_D / 2 + 0.01, P.KNOB_T + P.LAYER,
                                             P.KNOB_T + P.LAYER + P.GAUGE_STUB + 1)],
@@ -80,6 +88,9 @@ def printable_parts() -> dict[str, Part]:
         "tux_vise_fork": make_fork(),
         "tux_vise_nut": make_nut(),
         "tux_vise_screw": make_screw(),
+        "tux_vise_foot": make_foot(),
+        "tux_vise_foot_screw": make_foot_screw(),
+        "tux_vise_foot_nut": make_nut(),  # the same nut, for the foot
         "coupon_thread_gauge": make_gauge(),
         "coupon_thread_stub": make_stub(),
     }
@@ -116,6 +127,8 @@ def plates() -> Plates:
         "tux_vise_screw": (plate(["tux_vise_screw"]), []),
         # everything but Tux on one plate, in one colour: faster than the three plates
         "tux_vise_parts_one_colour": (plate(one_colour, "black"), []),
+        "tux_vise_foot": (plate(["tux_vise_foot", "tux_vise_foot_screw", "tux_vise_foot_nut"],
+                                "blue"), []),
         "coupon_thread": (plate(["coupon_thread_gauge", "coupon_thread_stub"]), []),
     }
 

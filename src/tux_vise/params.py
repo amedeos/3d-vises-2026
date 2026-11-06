@@ -115,3 +115,17 @@ BASE_L = X_POCKET1 + WALL_OUT
 GAUGE_L = layers(45)  # 9 mm = 3 turns, the engagement the vise needs
 GAUGE_PITCH = 22.0
 GAUGE_STUB = 20.0  # length of the coupon screw's thread
+
+# --- desk foot (optional): a C clamp under the Tux end of the base ----------------------
+# Printed on its side: its (y, z) profile on the bed, extruded along x. The base slides
+# into the channel on top (its bevels go under the two lips) until it meets the cap. The
+# foot screw goes up through a second nut and presses the underside of the desk.
+FOOT_L = 28.0  # along x (the nut, 24 mm, slides in from the side)
+FOOT_CAP = 2.0  # wall at one end of the channel: the base stops against it
+LIP_W = 3.0  # lips over the base's bevels
+LIP_TOP = BEVEL + 1.4  # height of the lips above the channel floor
+T_ARM = 4.0  # top arm, between the base and the desk
+SPINE_T = 7.0  # the upright in front of the desk edge
+NUT_WALL = 3.0  # above and below the nut in the bottom arm
+DESK_MIN = 15.0  # desk thickness range
+DESK_MAX = 35.0

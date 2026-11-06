@@ -18,7 +18,12 @@ from .export import COLOUR, printable_parts
 from .kinematics import turns_to_close
 from .model import (
     VISE_PARTS,
+    foot_in_place,
+    foot_layout,
+    foot_locations,
     jaw_x,
+    make_foot_screw,
+    make_nut,
     tux_colours,
     use_location,
 )
@@ -44,6 +49,19 @@ def vise_items(opening: float, with_board: bool = False):
 def board(opening: float) -> Part:
     """A small circuit board held between the belly and the jaw."""
     return box_between(P.X_BELLY, jaw_x(opening), -16, 16, 22, 44)
+
+
+def foot_items(desk: float = 25.0):
+    """The vise on its desk foot, clamped to the edge of a desk `desk` mm thick."""
+    loc = foot_locations(desk)
+    f = foot_layout()
+    items = vise_items(12.0) + [
+        (foot_in_place(), COLOUR["tux_vise_foot"]),
+        (loc["foot_nut"] * make_nut(), COLOUR["tux_vise_foot_nut"]),
+        (loc["foot_screw"] * make_foot_screw(), COLOUR["tux_vise_foot_screw"]),
+        (box_between(-30, 120, f["spine1"], 90, -(P.T_ARM + desk), -P.T_ARM), "card"),
+    ]
+    return items
 
 
 def parts_on_bed() -> list[tuple[Part, str]]:
@@ -74,6 +92,8 @@ def listing(out: Path, with_gifs: bool = False) -> None:
     render(vise_items(12.0), out / "vise_side.png", **SIDE, zoom=1.3, size=(1000, 700))
     render(parts_on_bed(), out / "vise_parts.png", elev=48, azim=-70, zoom=1.25,
            size=(1200, 700))
+    render(foot_items(), out / "vise_on_desk.png", elev=18, azim=-120, zoom=1.2,
+           size=(1000, 800))
     pp = printable_parts()
     coupon = row([pp["coupon_thread_gauge"], pp["coupon_thread_stub"]], gap=10.0)
     render([(p, "orange") for p in coupon], out / "coupon_thread.png", elev=50, azim=-70,
