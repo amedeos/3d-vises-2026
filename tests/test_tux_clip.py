@@ -209,6 +209,8 @@ def test_desk_card_stands_in_the_jaw():
     assert card.bounding_box().min.Z == pytest.approx(0.0, abs=1e-6)
     m = mechanism(P.DESK_SIZE)
     assert m.a_tip - (m.L / 2 + P.BRIDGE) > 8.0  # a jaw of 8 mm or more grips the card
+    with pytest.raises(ValueError):  # a card thicker than the jaw opens is refused
+        desk_card(thickness=7.0)
     assert m.opening_at(theta, "jaw") < m.opening  # a squeeze opens the jaw that far
 
 

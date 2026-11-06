@@ -528,7 +528,8 @@ def desk_card(thickness: float = 0.4, width: float = 85.0,
 
     The card starts at the top of the jaw and runs past the flipper tip, through the
     groove in the floe; it lies just outside the body's tooth tips. The swing is the
-    smallest that clears every flipper tooth tip.
+    smallest that clears every flipper tooth tip. A card too thick for the jaw raises
+    ValueError, like Mechanism.theta_for.
     """
     m = mechanism(P.DESK_SIZE)
     a0 = m.L / 2 + P.BRIDGE + 0.3
@@ -539,7 +540,10 @@ def desk_card(thickness: float = 0.4, width: float = 85.0,
     def clearance(theta: float) -> float:
         return min(pose_point(m.L, theta, m.a_tip, a, b)[1] for a, b in tips)
 
-    theta = _bisect(clearance, b0 + thickness + 0.05, hi=m.theta_stop_jaw)
+    need = b0 + thickness + 0.05
+    if clearance(m.theta_stop_jaw) < need:  # _bisect would stop at the stop, silently
+        raise ValueError(f"a {thickness} mm card does not fit the desk version's jaw")
+    theta = _bisect(clearance, need, hi=m.theta_stop_jaw)
     card = Pos(a0 + width / 2, b0 + thickness / 2, height / 2) * Box(width, thickness, height)
     return m.plane.location * card, theta
 
