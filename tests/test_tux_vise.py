@@ -130,6 +130,19 @@ def test_gnu_knob_carries_the_shank():
         assert (wall - gnu).area == pytest.approx(0, abs=1e-3)  # the wall around the hole
     assert len(gnu.faces()[0].inner_wires()) == len(holes(P.GNU_R))
 
+
+@pytest.mark.parametrize("opening", [-1.0, 0.0, 0.4, 2.0, 12.0, P.OPEN_MAX, P.OPEN_MAX + 1.6])
+def test_render_poses_stay_within_the_travel(opening):
+    """The renders pose the vise at whole turns from fully open (the gnu upright), and
+    never outside the jaw's travel."""
+    from tux_vise.render import upright
+
+    u = upright(opening)
+    assert 0.0 <= u <= P.OPEN_MAX
+    turns = turns_to_close(u)
+    assert turns == pytest.approx(round(turns))
+    assert abs(u - min(max(opening, 0.0), P.OPEN_MAX)) <= P.PITCH
+
 # --- stops -----------------------------------------------------------------------------------
 
 def test_jaw_stops_on_the_end_block_and_on_the_belly():

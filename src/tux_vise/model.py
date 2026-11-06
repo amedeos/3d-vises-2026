@@ -295,7 +295,8 @@ def make_screw() -> Part:
     length = st["length"]
     z = lambda s: length - s  # noqa: E731  (screw station -> print height)
     # use_location turns the knob's +y downwards: turned over, the gnu's horns point up
-    # at every whole turn from fully open
+    # in the renders at every whole turn from fully open (render.upright). On a printed
+    # vise the knob's angle at a given opening depends on how the nut sits in its pocket.
     knob = extrude(Rot(0, 0, 180) * gnu_sketch(P.GNU_R), P.KNOB_T, dir=(0, 0, 1))
     # 0.1 mm wider than the thread, so the thread's square end sits on it
     shank = Pos(0, 0, P.KNOB_T) * Cylinder(P.SHANK_R, z(st["thread1"]) - P.KNOB_T,

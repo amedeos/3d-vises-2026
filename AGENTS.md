@@ -165,9 +165,10 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
   (`SHANK_R`): it covers the shank's disc, and the eyes and nostrils (holes) stay outside
   it, or the shank's bottom would hang over a hole. Each hole also keeps two lines of wall
   to the outline. Below about 23.2 mm the nostrils do not fit: `gnu_sketch` raises an
-  error. `make_screw` turns the gnu over so that its horns
-  point up at every whole turn from fully open; the renders use those openings
-  (`render.upright`).
+  error. `make_screw` turns the gnu over so that, in the renders, its horns point up at
+  every whole turn from fully open (`render.upright` picks those openings). On a printed
+  vise the knob's angle at a given opening depends on how the nut sits in its pocket:
+  nothing in the design sets it.
 
 ## Layers and lines (0.4 mm nozzle, 0.2 mm layers)
 

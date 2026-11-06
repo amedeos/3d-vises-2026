@@ -5,6 +5,7 @@
 """
 
 import sys
+from math import floor
 from pathlib import Path
 
 from build123d import Part, Pos, Rot
@@ -15,7 +16,7 @@ from common.shapes import box_between
 
 from . import params as P
 from .export import COLOUR, printable_parts
-from .kinematics import turns_to_close
+from .kinematics import opening_after, turns_to_close
 from .model import (
     VISE_PARTS,
     foot_in_place,
@@ -34,9 +35,10 @@ SIDE = {"elev": 14, "azim": 100}
 
 
 def upright(opening: float) -> float:
-    """The opening nearest to `opening` at a whole number of turns from fully open: there
-    the gnu knob stands upright, horns up."""
-    return P.OPEN_MAX - P.PITCH * round((P.OPEN_MAX - opening) / P.PITCH)
+    """The opening nearest to `opening`, within the travel, at a whole number of turns from
+    fully open: there the renders show the gnu knob upright, horns up."""
+    whole = min(max(round(turns_to_close(opening)), 0), floor(turns_to_close(0.0)))
+    return opening_after(whole)
 
 
 def vise_items(opening: float, with_board: bool = False):
@@ -91,8 +93,7 @@ def listing(out: Path, with_gifs: bool = False) -> None:
     """Every image for the Printables page."""
     out.mkdir(parents=True, exist_ok=True)
     # whole turns from fully open keep the gnu upright
-    closed_on_board = P.OPEN_MAX - P.PITCH * int(P.OPEN_MAX / P.PITCH)
-    render(vise_items(closed_on_board, with_board=True), out / "vise_hero.png", **HERO, zoom=1.3,
+    render(vise_items(upright(0.0), with_board=True), out / "vise_hero.png", **HERO, zoom=1.3,
            size=(1000, 800))
     render(vise_items(upright(P.OPEN_MAX * 0.6)), out / "vise_open.png", **HERO, zoom=1.3,
            size=(1000, 800))
