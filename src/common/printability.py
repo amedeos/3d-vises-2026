@@ -22,11 +22,22 @@ def off_grid_faces(part: Part) -> list[float]:
     return sorted(set(heights))
 
 
+_MESHES: dict[tuple[int, float], tuple] = {}
+
+
 def _mesh(part: Part, tolerance: float = 0.02):
+    """The part tessellated as a trimesh, memoised: the tests section the same cached parts
+    several times, and the threaded ones are slow to tessellate. The entry keeps the part
+    alive, so its id cannot be reused."""
     import trimesh
 
-    verts, tris = part.tessellate(tolerance, 0.2)
-    return trimesh.Trimesh([[v.X, v.Y, v.Z] for v in verts], tris)
+    key = (id(part), tolerance)
+    hit = _MESHES.get(key)
+    if hit is None or hit[0] is not part:
+        verts, tris = part.tessellate(tolerance, 0.2)
+        hit = (part, trimesh.Trimesh([[v.X, v.Y, v.Z] for v in verts], tris))
+        _MESHES[key] = hit
+    return hit[1]
 
 
 def layer_sections(part: Part, heights=None):

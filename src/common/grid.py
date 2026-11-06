@@ -53,5 +53,8 @@ def snap_up(z: float) -> float:
 
 
 def on_grid(z: float, tol: float = 1e-3) -> bool:
-    """True if z is a layer boundary."""
-    return abs(z - round(z / LAYER) * LAYER) < tol
+    """True if z is a layer boundary (0, FIRST_LAYER, FIRST_LAYER + n * LAYER)."""
+    if abs(z) < tol:
+        return True
+    n = round((z - FIRST_LAYER) / LAYER)
+    return n >= 0 and abs(FIRST_LAYER + n * LAYER - z) < tol
