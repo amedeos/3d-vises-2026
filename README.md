@@ -109,21 +109,21 @@ Squeeze each flipper and feel the difference. A thicker leaf grips harder but op
 
 ## Tux Vise
 
-A small desk vise, 86 mm long. **Tux is the fixed jaw: you clamp things against his belly.** His flipper is the moving jaw, and you turn a fish to drive it. It holds a circuit board while you solder, a small part while you file it, or a phone stand while the glue dries.
+A small desk vise, 86 mm long. **Tux is the fixed jaw: you clamp things against his belly.** His flipper is the moving jaw, and you turn a gnu to drive it: GNU/Linux, the gnu moves Tux. It holds a circuit board while you solder, a small part while you file it, or a phone stand while the glue dries.
 
-Everything is printed, the thread too: no screws, no nuts, no springs. The jaw opens from 0 to 35 mm, 3 mm per turn of the fish.
+Everything is printed, the thread too: no screws, no nuts, no springs. The jaw opens from 0 to 35 mm, 3 mm per turn of the gnu.
 
 
 ### How it works
 
 - **Tux** stands in a slot at one end of the base, his back against a backstop. His white belly is the face of the fixed jaw. He prints on his back in black, white and orange, like the clip.
 - **The flipper** (the moving jaw) slides on a dovetail rail along the base, so it cannot tip or lift.
-- **The screw** goes through a square nut that sits in the end block. Its head sits in a small chamber inside the flipper, and a **fork** dropped into the top of the flipper keeps it there. Turn the fish clockwise and the tip of the screw pushes the flipper towards Tux. Turn it back and the head pulls the flipper open.
+- **The screw** goes through a square nut that sits in the end block. Its head sits in a small chamber inside the flipper, and a **fork** dropped into the top of the flipper keeps it there. Turn the gnu clockwise and the tip of the screw pushes the flipper towards Tux. Turn it back and the head pulls the flipper open.
 - **Stops.** Fully open, the flipper stops against the end block. Closed, it stops on Tux's belly. The flipper can only leave the rail at Tux's end, and Tux is in the way.
 - **The thread** is a trapezoid with 45-degree flanks: 14 mm across, 3 mm pitch. A standard (ISO) trapezoidal thread has 15-degree flanks, and printed upright every tooth would overhang almost flat. With 45-degree flanks, the screw and the nut print upright without supports, like every other part. The nut and the screw both print standing, so the thread follows the layers.
 - **Always in the nut.** At every jaw position, the whole nut (4 turns) is on the thread. The tests check at least 3 turns.
 
-| Turns of the fish (from fully open) | 0 | 2 | 4 | 6 | 8 | 10 | 11.7 |
+| Turns of the gnu (from fully open) | 0 | 2 | 4 | 6 | 8 | 10 | 11.7 |
 |---|---|---|---|---|---|---|---|
 | Jaw opening | 35 mm | 29 mm | 23 mm | 17 mm | 11 mm | 5 mm | 0 |
 
@@ -134,17 +134,17 @@ The beak and the feet stand 0.4 mm proud of the belly (they are the orange layer
 
 ### Printing
 
-Same printer and profile as the clip: Prusa MK4, **Prusament PETG**, 0.4 mm nozzle, **0.20mm STRUCTURAL**, **no supports**. Every part prints in the pose of its STL: Tux and the fork flat, the base and the flipper upright, the nut and both screws standing (the fish knob is the bottom of the screw).
+Same printer and profile as the clip: Prusa MK4, **Prusament PETG**, 0.4 mm nozzle, **0.20mm STRUCTURAL**, **no supports**. Every part prints in the pose of its STL: Tux and the fork flat, the base and the flipper upright, the nut and both screws standing (the gnu knob is the bottom of the screw).
 
 | Plate (3MF) | Parts | Colours | Time* | Filament* |
 |---|---|---|---|---|
 | `tux_vise_tux` | Tux | black, white, orange | 19 min | 8 g |
 | `tux_vise_base` | base | one colour (blue: ice) | 1 h 03 min | 23 g |
 | `tux_vise_jaw` | flipper, fork, nut | one colour (black) | 50 min | 13 g |
-| `tux_vise_screw` | screw with the fish | one colour (orange) | 1 h 00 min | 7 g |
-| `tux_vise_parts_one_colour` | base, flipper, fork, nut, screw | one colour | 2 h 34 min | 43 g |
-| `tux_vise_foot` | desk foot, foot screw, foot nut | one colour | 1 h 32 min | 25 g |
-| `coupon_thread` | thread coupon | one colour | 50 min | 13 g |
+| `tux_vise_screw` | screw with the gnu | one colour (orange) | 1 h 03 min | 8 g |
+| `tux_vise_parts_one_colour` | base, flipper, fork, nut, screw | one colour | 2 h 37 min | 43 g |
+| `tux_vise_foot` | desk foot, foot screw, foot nut | one colour | 1 h 37 min | 26 g |
+| `coupon_thread` | thread coupon | one colour | 56 min | 14 g |
 
 \* PrusaSlicer 2.9.6 estimates (Prusament PETG, 0.20mm STRUCTURAL). The screw is light but slow: it is tall and thin, so the slicer slows down to give each small layer time to cool. If you print everything except Tux in one colour, `tux_vise_parts_one_colour` saves about 20 minutes over the three separate plates.
 
@@ -159,9 +159,9 @@ Same printer and profile as the clip: Prusa MK4, **Prusament PETG**, 0.4 mm nozz
 Tux in one colour still looks like Tux: his belly, eyes, beak and feet are raised, and the pupils are holes.
 
 
-### Print the thread coupon first (about 50 min)
+### Print the thread coupon first (about 56 min)
 
-`coupon_thread.3mf` is a strip with four nut holes and 20 mm of the real screw on a small fish. Each hole is 3 turns long and has a different clearance (radial, between the screw and the nut):
+`coupon_thread.3mf` is a strip with four nut holes and 20 mm of the real screw on a gnu knob, the same as the vise's. Each hole is 3 turns long and has a different clearance (radial, between the screw and the nut):
 
 | Dots | Clearance |
 |---|---|
@@ -177,16 +177,16 @@ Screw the stub into each hole. Pick the tightest one that turns smoothly all the
 
 1. Drop the nut into the pocket on top of the end block.
 2. Slide the flipper onto the rail from Tux's end, its flat face towards Tux's end, and push it up to the end block.
-3. From the outside, screw the fish screw into the end block, through the nut, until its head goes through the hole in the back of the flipper.
+3. From the outside, put the screw in head first and screw it through the nut in the end block, until its head goes through the hole in the back of the flipper.
 4. Drop the fork into the slot on top of the flipper, tines down: they go either side of the thin neck behind the head.
 5. Plug Tux into the slot at the end of the base, belly towards the flipper.
 
-Turn the fish clockwise (seen from the fish) to close the jaw.
+Turn the gnu clockwise (seen from the gnu) to close the jaw.
 
 
 ### Desk foot (optional)
 
-A clamp for the edge of a desk or a shelf **15 to 35 mm thick**. Slide the base into the channel on top of the foot, Tux's end first, until it stops: the two lips hold the bevels along the bottom of the base. Slide the second nut into the window in the lower arm, screw the foot screw up through it, hook the foot over the edge and tighten the small fish.
+A clamp for the edge of a desk or a shelf **15 to 35 mm thick**. Slide the base into the channel on top of the foot, Tux's end first, until it stops: the two lips hold the bevels along the bottom of the base. Slide the second nut into the window in the lower arm, screw the foot screw up through it, hook the foot over the edge and tighten the screw by its gnu knob.
 
 The foot keeps 3 or more turns of thread in its nut over the whole range, like the vise.
 
@@ -202,7 +202,7 @@ uv run python -m tux_clip.export        # STL files (out/stl) and 3MF plates (ou
 uv run python -m tux_clip.slicer        # optional, needs PrusaSlicer: times + projects
 uv run python -m tux_clip.render        # listing images in out/render (no OpenGL needed)
 uv run python -m tux_clip.render --gif  # ...plus the GIFs
-uv run python -m tux_vise.kinematics    # turns of the fish -> jaw opening, thread engagement
+uv run python -m tux_vise.kinematics    # turns of the gnu -> jaw opening, thread engagement
 uv run python -m tux_vise.export        # the same for the vise
 uv run python -m tux_vise.slicer
 uv run python -m tux_vise.render --gif
@@ -214,3 +214,4 @@ uv run python -m tux_vise.render --gif
 
 - Model and code: **CC BY-SA 4.0** (see `LICENSE`).
 - Tux by Larry Ewing (lewing@isc.tamu.edu), made with GIMP.
+- The gnu knob is our own drawing of a gnu, a nod to GNU/Linux. It is not the GNU logo, and this project is not affiliated with the Free Software Foundation or the GNU Project.

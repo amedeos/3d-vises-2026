@@ -12,8 +12,8 @@ Both models share one code base.
    Squeeze his shoulders and the flippers open. Sizes S, M and L, a desk version (Tux lies
    on an ice floe and holds a card upright) and a flexure coupon. Done: see README.
 2. **Tux Vise:** a small desk vise. Tux's belly is the fixed jaw, a flipper is the moving
-   jaw, a printed trapezoidal screw drives it and the knob is a fish. Optional desk foot and
-   a thread coupon. Done: see README.
+   jaw, a printed trapezoidal screw drives it and the knob is a gnu's head (GNU/Linux: the
+   gnu moves Tux). Optional desk foot and a thread coupon. Done: see README.
 
 - **Deadline:** entries close on 22 Nov 2026, 23:59 UTC.
 - **Goal:** downloads and likes, not the prize. Every model must be recognisable at first
@@ -45,7 +45,7 @@ uv run python -m tux_clip.model            # flexure numbers per size (opening, 
 uv run python -m tux_clip.export           # STLs -> out/stl/tux_clip, 3MF plates -> out/3mf/tux_clip
 uv run python -m tux_clip.slicer           # optional, PrusaSlicer CLI: times, checks, projects
 uv run python -m tux_clip.render           # PNG previews -> out/render/tux_clip (add --gif)
-uv run python -m tux_vise.kinematics       # turns of the fish -> opening, thread engagement
+uv run python -m tux_vise.kinematics       # turns of the gnu -> opening, thread engagement
 uv run python -m tux_vise.export           # out/stl/tux_vise, out/3mf/tux_vise
 uv run python -m tux_vise.slicer           # optional
 uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
@@ -69,6 +69,7 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
 | `src/tux_clip/export.py`, `render.py`, `slicer.py` | Entry points (`python -m tux_clip.<name>`) |
 | `src/tux_vise/params.py` | **Single source of truth** for the vise: layout along x, thread, clearances, foot |
 | `src/tux_vise/thread.py` | The 45-degree trapezoidal thread (bd_warehouse `Thread`): screw, nut bore, threaded hole |
+| `src/tux_vise/gnu.py` | The gnu knob of the three screws: our own stylised gnu head, outline built with shapely |
 | `src/tux_vise/model.py` | Every vise part in its print pose, `use_location()` / `assembly()`, foot, coupon |
 | `src/tux_vise/kinematics.py` | Turns -> opening, thread engagement (from the geometry) |
 | `src/tux_vise/export.py`, `render.py`, `slicer.py` | Entry points (`python -m tux_vise.<name>`). `export.thread_zones()` lists the threads the width tests skip. |
@@ -116,7 +117,7 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
 
 ## Tux Vise mechanism (do not break it)
 
-- **Frames.** `params.py` describes the vise frame: x along the screw from Tux to the fish,
+- **Frames.** `params.py` describes the vise frame: x along the screw from Tux to the gnu,
   z up, the bottom of the base on z = 0. Every part is *built in its print pose* (that is
   what `printable_parts()` and the layer tests use) and `use_location(name, opening)`
   moves it into the vise. `assembly(opening)` places them all.
@@ -154,6 +155,16 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
   a colour (`export.COLOUR`). Only Tux changes colour.
 - **Print time.** Tall thin parts (the screws, the coupon stub) are slow because of the
   slicer's minimum layer time, not because of their volume.
+- **Gnu knob.** All three screws (vise, foot, coupon) stand on the same gnu head,
+  `gnu_sketch(KNOB_R)`. It is our own drawing, not the GNU logo (a trademark; its fine hair
+  would be thinner than two lines). Its outline is built in shapely, because build123d's
+  2D offsets fail on it: a closing (notches under a line) and an opening (tips of at least
+  two lines), so it passes the width tests by construction. The knob carries the plain
+  shank (`SHANK_R`): it covers the shank's disc, and the eyes and nostrils (holes) stay
+  outside it, or the shank's bottom would hang over a hole. At a smaller radius they do
+  not fit: `gnu_sketch` raises an error. `make_screw` turns the gnu over so that its horns
+  point up at every whole turn from fully open; the renders use those openings
+  (`render.upright`).
 
 ## Layers and lines (0.4 mm nozzle, 0.2 mm layers)
 
