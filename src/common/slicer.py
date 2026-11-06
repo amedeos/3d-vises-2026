@@ -11,6 +11,9 @@ For every plate in out/3mf it:
    The project's filament colour is the plate's start colour: PrusaSlicer ignores the
    object colours of a 3MF and shows the first layers in the colour of the filament
    profile (#FF8000, orange, for Prusament PETG).
+   The project is written only if PrusaSlicer loaded the MK4 profiles and a slice of the
+   project alone gives the same printer and the start colour, so a failed run never
+   replaces a good project.
 
 PrusaSlicer writes its complete configuration at the end of every G-code file, in the
 same "; key = value" format that it stores inside project 3MF files. We take it from
@@ -40,6 +43,7 @@ PROFILES = {
     "--material-profile": "Prusament PETG @PGIS",  # default material for this model
 }
 CONFIG_ENTRY = "Metadata/Slic3r_PE.config"
+MK4_BED = "0x0,250x0,250x210,0x210"  # bed_shape with the MK4 profiles loaded
 MODEL_ENTRY = "3D/3dmodel.model"
 
 
@@ -148,6 +152,28 @@ def make_project(plate: Path, config: str, out: Path) -> None:
         z.writestr(CONFIG_ENTRY, config)
 
 
+def _project(cmd: list[str], plate: Path, gcode: Path, colours: set[str], printer: str,
+             tmp: Path) -> str:
+    """Build the plate's project in `tmp` and slice it alone; if it loads the same printer
+    and the start colour, copy it to <folder>/projects. Returns the problem, or ""."""
+    config = config_from_gcode(gcode)
+    if len(colours) == 1:
+        config = with_start_colour(config, *colours)
+    project = tmp / "projects" / plate.name
+    make_project(plate, config, project)
+    check = tmp / f"{plate.stem}.check.gcode"
+    slice_plate(cmd, project, check, profiles=False)
+    loaded = summary(check)
+    if loaded["printer"] != printer:
+        return "project does not carry the printer settings: not written"
+    if len(colours) == 1 and loaded["colour"].upper() != next(iter(colours)):
+        return f"project starts in {loaded['colour']}, the plate in {colours}: not written"
+    out = plate.parent / "projects" / plate.name
+    out.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(project, out)
+    return ""
+
+
 def main(folder: Path, planned: dict[str, list[Change]], model: str) -> int:
     """Slice every plate in `folder`; `planned` holds the colour changes the design wants."""
     cmd = prusaslicer_command()
@@ -155,7 +181,7 @@ def main(folder: Path, planned: dict[str, list[Change]], model: str) -> int:
     if not plates:
         print(f"no plates in {folder}: run `python -m {model}.export` first")
         return 1
-    problems = 0
+    problems = written = 0
     with tempfile.TemporaryDirectory() as tmp:
         for plate in plates:
             gcode = Path(tmp) / f"{plate.stem}.gcode"
@@ -175,28 +201,24 @@ def main(folder: Path, planned: dict[str, list[Change]], model: str) -> int:
             if info["m600"] != len(expected) or sorted(info["m600_z"]) != expected:
                 issues.append(f"expected M600 at {expected}, found {info['m600']} "
                               f"at {info['m600_z']}")
-            config = config_from_gcode(gcode)
             colours = start_colours(plate)
-            if len(colours) == 1:
-                config = with_start_colour(config, *colours)
-            else:
+            if len(colours) != 1:
                 issues.append(f"objects start in different colours: {sorted(colours)}")
-            project = folder / "projects" / plate.name
-            make_project(plate, config, project)
-            # the project alone (no profile options) must give the same printer
-            check = Path(tmp) / f"{plate.stem}.check.gcode"
-            slice_plate(cmd, project, check, profiles=False)
-            if info["bed"] != "0x0,250x0,250x210,0x210":
-                issues.append(f"not the MK4 bed ({info['bed']}): profiles not loaded")
-            loaded = summary(check)
-            if loaded["printer"] != info["printer"]:
-                issues.append("project does not carry the printer settings")
-            if len(colours) == 1 and loaded["colour"].upper() != next(iter(colours)):
-                issues.append(f"project starts in {loaded['colour']}, the plate in {colours}")
+            if info["bed"] != MK4_BED:
+                # PrusaSlicer sliced with its defaults: a project would carry them
+                issues.append(f"not the MK4 bed ({info['bed']}): profiles not loaded, "
+                              "project not written")
+            else:
+                problem = _project(cmd, plate, gcode, colours, info["printer"], Path(tmp))
+                if problem:
+                    issues.append(problem)
+                else:
+                    written += 1
             problems += bool(issues)
             print(f"{plate.stem:32s} {info['time']:>12s} {info['filament_g']:>7s} g  "
                   f"M600 at Z {info['m600_z'] or '-'}  {'OK' if not issues else '; '.join(issues)}")
-    print(f"\nProjects written to {folder / 'projects'} ({PROFILES['--printer-profile']}, "
-          f"{PROFILES['--print-profile']}, {PROFILES['--material-profile']})")
+    print(f"\n{written} of {len(plates)} projects written to {folder / 'projects'} "
+          f"({PROFILES['--printer-profile']}, {PROFILES['--print-profile']}, "
+          f"{PROFILES['--material-profile']})")
     return 1 if problems else 0
 

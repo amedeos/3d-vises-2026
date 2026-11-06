@@ -222,10 +222,11 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
 - `--printer-profile` needs a PrusaSlicer data folder with the Prusa vendor profiles
   installed (Configuration Wizard). **Without them the CLI does not fail: it slices with
   its defaults** (a 200 x 200 mm bed, no filament density), drops parts outside that bed
-  and gives wrong times. `slicer.py` flags a bed that is not the MK4 one. Copying the
-  vendor `.ini` into a bare `--datadir` was not enough. What works: `PRUSA_CONFIG` pointing
-  to a full config (the `Metadata/Slic3r_PE.config` of a project 3MF made on a machine
-  with the profiles, without the `; ` prefixes), loaded with `--load`.
+  and gives wrong times. `slicer.py` flags a bed that is not the MK4 one and then writes no
+  project. Copying the vendor `.ini` into a bare `--datadir` was not enough. What works:
+  `PRUSA_CONFIG` pointing to a full config (the `Metadata/Slic3r_PE.config` of a project
+  3MF made on a machine with the profiles, without the `; ` prefixes), loaded with
+  `--load`.
 - With colour changes, PrusaSlicer 2.9 writes `total filament used [g] = 0.00`.
   `slicer.py` computes the grams from `filament used [cm3]` and `filament_density`.
 
