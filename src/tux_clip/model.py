@@ -24,12 +24,12 @@ from math import cos, degrees, radians, sin
 
 import numpy as np
 from build123d import (
+    Box,
     Circle,
     Kind,
     Location,
     Part,
     Plane,
-    Polygon,
     Pos,
     Rectangle,
     Rot,
@@ -39,6 +39,7 @@ from build123d import (
     offset,
 )
 
+from common.shapes import polygon
 from common.tux import mirror_x, spline_face, tux_profile
 
 from . import params as P
@@ -267,10 +268,6 @@ def coupon_mechanism(flex_lines: int) -> Mechanism:
 
 # --- 2D geometry of one mechanism, in its local frame (a, b) ---------------------------
 
-def _poly(*pts) -> Sketch:
-    return Sketch() + Polygon(*pts, align=None)
-
-
 def _box(a0: float, a1: float, b0: float, b1: float) -> Sketch:
     return Pos((a0 + a1) / 2, (b0 + b1) / 2) * Rectangle(a1 - a0, b1 - b0)
 
@@ -309,7 +306,7 @@ def flipper_local(m: Mechanism) -> Sketch:
     """The flipper (shoulder pad, jaw and its teeth) at rest, without the leaf."""
     t, W = m.t, P.JAW_W
     far = m.a_tip + 20
-    allowed = _poly((m.a_pt, wedge_b(m, m.a_pt)), (m.L / 2, m.t / 2 + P.SLOT_MIN),
+    allowed = polygon((m.a_pt, wedge_b(m, m.a_pt)), (m.L / 2, m.t / 2 + P.SLOT_MIN),
                     (m.L / 2, -t / 2), (m.L / 2 + P.BRIDGE, -t / 2),
                     (m.L / 2 + P.BRIDGE, W / 2), (far, W / 2), (far, 60), (m.a_pt, 60))
     flipper = flipper_envelope(m) & allowed
@@ -338,7 +335,7 @@ def leaf_local(m: Mechanism, theta: float = 0.0, load: str = "squeeze",
            + [((outer[-1] + tangent * overlap).X, (outer[-1] + tangent * overlap).Y),
               ((inner[-1] + tangent * overlap).X, (inner[-1] + tangent * overlap).Y)]
            + [(p.X, p.Y) for p in reversed(inner)] + [(-L / 2 - overlap, t / 2)])
-    return _poly(*pts)
+    return polygon(*pts)
 
 
 def leaf_slot_b(m: Mechanism) -> float:
@@ -362,7 +359,7 @@ def pocket_local(m: Mechanism) -> Sketch:
     t, W = m.t, P.JAW_W
     top = m.a_pt - 0.5
     low = m.a_tip + 0.03 * m.height
-    return _poly((top, t / 2), *_flank(m), (low, -W / 2), (low, 80), (top, 80))
+    return polygon((top, t / 2), *_flank(m), (low, -W / 2), (low, 80), (top, 80))
 
 
 def body_extra_local(m: Mechanism) -> Sketch:
@@ -372,7 +369,7 @@ def body_extra_local(m: Mechanism) -> Sketch:
     """
     t, W = m.t, P.JAW_W
     top = stop_face_top(m)
-    return _poly((top - 3.0, jaw_back(m)), (top, t / 2), *_flank(m), (m.a_tip, -W / 2),
+    return polygon((top - 3.0, jaw_back(m)), (top, t / 2), *_flank(m), (m.a_tip, -W / 2),
                  (m.a_tip, jaw_back(m)))
 
 
@@ -440,9 +437,13 @@ def moving_local(m: Mechanism, theta: float = 0.0, load: str = "squeeze") -> Ske
     return leaf_local(m, theta, load) + pose(m, theta, load) * flipper_local(m)
 
 
-def clip_profile(m: Mechanism, theta: float = 0.0) -> Sketch:
-    """The black profile of the clip with both flippers swung by theta."""
-    return body_profile(m) + _both_sides(m, moving_local(m, theta))
+def clip_profile(m: Mechanism, theta: float = 0.0, load: str = "squeeze",
+                 right_only: bool = False) -> Sketch:
+    """The black profile of the clip with the flippers swung by theta under `load`; with
+    right_only, the left flipper stays at rest (the desk version holding a card)."""
+    right = m.plane.location * moving_local(m, theta, load)
+    left = m.plane.location * moving_local(m, 0.0) if right_only else right
+    return body_profile(m) + right + mirror_x(left)
 
 
 def flipper_placed(m: Mechanism, theta: float, load: str = "squeeze") -> Sketch:
@@ -452,10 +453,14 @@ def flipper_placed(m: Mechanism, theta: float, load: str = "squeeze") -> Sketch:
 
 # --- 3D parts, per colour ----------------------------------------------------------------
 
-def clip_colours(size: str, theta: float = 0.0) -> tuple[tuple[Part, str], ...]:
-    """The clip of one size as (part, colour), stacked along Z, flippers swung by theta.
-    Only the print pose (theta = 0) is cached: animation frames are used once."""
-    return _clip_at_rest(size) if theta == 0 else _clip_colours(size, theta)
+def clip_colours(size: str, theta: float = 0.0, load: str = "squeeze",
+                 right_only: bool = False) -> tuple[tuple[Part, str], ...]:
+    """The clip of one size as (part, colour), stacked along Z, flippers swung by theta
+    (see clip_profile). Only the print pose (theta = 0) is cached: animation frames are
+    used once."""
+    if theta == 0:
+        return _clip_at_rest(size)
+    return _clip_colours(size, theta, load, right_only)
 
 
 @cache
@@ -463,10 +468,11 @@ def _clip_at_rest(size: str) -> tuple[tuple[Part, str], ...]:
     return _clip_colours(size, 0.0)
 
 
-def _clip_colours(size: str, theta: float) -> tuple[tuple[Part, str], ...]:
+def _clip_colours(size: str, theta: float, load: str = "squeeze",
+                  right_only: bool = False) -> tuple[tuple[Part, str], ...]:
     m = mechanism(size)
     tux = tux_profile(m.height)
-    black = extrude(clip_profile(m, theta), P.T_BODY, dir=(0, 0, 1))
+    black = extrude(clip_profile(m, theta, load, right_only), P.T_BODY, dir=(0, 0, 1))
     white = Pos(0, 0, P.Z_WHITE) * extrude(tux.white, P.T_WHITE, dir=(0, 0, 1))
     orange = Pos(0, 0, P.Z_ORANGE) * extrude(tux.orange, P.T_ORANGE, dir=(0, 0, 1))
     return ((black, "black"), (white, "white"), (orange, "orange"))
@@ -494,18 +500,48 @@ def floe_sketch(m: Mechanism) -> Sketch:
     return Sketch() + spline_face(pts)
 
 
-def desk_colours(theta: float = 0.0) -> tuple[tuple[Part, str], ...]:
+def desk_colours(theta: float = 0.0, load: str = "squeeze",
+                 right_only: bool = False) -> tuple[tuple[Part, str], ...]:
     """The desk version as (part, colour): the clip plus a floe that leaves the flippers
-    free over their whole swing."""
-    clip = clip_colours(P.DESK_SIZE, theta)
+    free over their whole swing, with a groove along each jaw line for a card."""
+    clip = clip_colours(P.DESK_SIZE, theta, load, right_only)
     return ((clip[0][0] + desk_floe(), "black"), clip[1], clip[2])
+
+
+def card_groove_local(m: Mechanism) -> Sketch:
+    """The groove through the floe: the jaw line continued past the flipper tip."""
+    return _box(m.L / 2 + P.BRIDGE, m.a_tip + 200, -P.JAW_W / 2,
+                -P.JAW_W / 2 + P.CARD_GROOVE)
 
 
 @cache
 def desk_floe() -> Part:
     m = mechanism(P.DESK_SIZE)
-    free = _both_sides(m, offset(sweep_local(m), P.FLIPPER_CLEARANCE, kind=Kind.ARC))
-    return extrude(floe_sketch(m) - free, P.T_BASE, dir=(0, 0, 1))
+    free = offset(sweep_local(m), P.FLIPPER_CLEARANCE, kind=Kind.ARC) + card_groove_local(m)
+    return extrude(floe_sketch(m) - _both_sides(m, free), P.T_BASE, dir=(0, 0, 1))
+
+
+def desk_card(thickness: float = 0.4, width: float = 85.0,
+              height: float = 55.0) -> tuple[Part, float]:
+    """A card standing on the desk in the right jaw of the desk version, and the swing
+    (under the "jaw" load) that lets it in.
+
+    The card starts at the top of the jaw and runs past the flipper tip, through the
+    groove in the floe; it lies just outside the body's tooth tips. The swing is the
+    smallest that clears every flipper tooth tip.
+    """
+    m = mechanism(P.DESK_SIZE)
+    a0 = m.L / 2 + P.BRIDGE + 0.3
+    b0 = P.TOOTH_D - P.JAW_W / 2 + 0.05  # just past the body's tooth tips
+    tips = [(a + s * P.TOOTH_W / 2, P.JAW_W / 2 - P.TOOTH_D)
+            for a in teeth_positions(m)[1] for s in (-1, 1)]
+
+    def clearance(theta: float) -> float:
+        return min(pose_point(m.L, theta, m.a_tip, a, b)[1] for a, b in tips)
+
+    theta = _bisect(clearance, b0 + thickness + 0.05, hi=m.theta_stop_jaw)
+    card = Pos(a0 + width / 2, b0 + thickness / 2, height / 2) * Box(width, thickness, height)
+    return m.plane.location * card, theta
 
 
 @cache
@@ -540,6 +576,7 @@ def _coupon_levers() -> list[Mechanism]:
     return [coupon_mechanism(n) for n in P.COUPON_LINES]
 
 
+@cache
 def coupon_pitch() -> float:
     """Lever spacing: a flipper's whole swing stays 1.5 mm from the next fixed jaw."""
     levers = _coupon_levers()

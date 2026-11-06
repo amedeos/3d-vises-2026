@@ -8,12 +8,12 @@ import sys
 from math import pi, sin
 from pathlib import Path
 
-from build123d import Box, Part, Pos, extrude
+from build123d import Pos, extrude
 
 from common.render import gif, render
 
 from . import params as P
-from .model import clip_colours, coupon_profile, desk_colours, make_coupon, mechanism
+from .model import clip_colours, coupon_profile, desk_card, desk_colours, make_coupon, mechanism
 
 FRONT = {"elev": 90, "azim": -90}  # straight down on the face (the clip lies on its back)
 HERO = {"elev": 58, "azim": -72}
@@ -24,19 +24,12 @@ def clip_items(size: str, theta: float = 0.0, shift: tuple[float, float] = (0, 0
     return [(Pos(*shift, 0) * part, colour) for part, colour in clip_colours(size, theta)]
 
 
-def card(width: float = 85.0, height: float = 55.0, thickness: float = 0.4) -> Part:
-    """A business card standing in the right flipper of the desk version."""
-    m = mechanism(P.DESK_SIZE)
-    a_mid = (m.L / 2 + P.BRIDGE + m.a_tip) / 2
-    b = P.TOOTH_D - P.JAW_W / 2 + thickness / 2 + 0.05  # just past the body teeth
-    return m.plane.location * Pos(a_mid, b, height / 2) * Box(width, thickness, height)
-
-
 def desk_items(with_card: bool = True):
-    m = mechanism(P.DESK_SIZE)
-    theta = m.theta_for(0.6) if with_card else 0.0
-    items = list(desk_colours(theta))
-    return items + ([(card(), "card")] if with_card else [])
+    """The desk version holding a business card in its right jaw (the left flipper rests)."""
+    if not with_card:
+        return list(desk_colours())
+    card, theta = desk_card()
+    return list(desk_colours(theta, "jaw", right_only=True)) + [(card, "card")]
 
 
 def listing(out: Path, with_gifs: bool = False) -> None:

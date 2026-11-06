@@ -59,7 +59,7 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
 |---|---|
 | `src/common/grid.py` | `LAYER`, `LINE_W`, `lines(n)`, `layer_top()`, `snap_up()`: the slicer grid |
 | `src/common/tux.py` | The Tux profile (2D regions per colour), parametric by height |
-| `src/common/shapes.py` | Small geometry helpers (`box_between`, `ellipsoid`) |
+| `src/common/shapes.py` | Small geometry helpers (`box_between`, `polygon`, `teardrop`) |
 | `src/common/export.py` | Part checks, STL export, 3MF plates with M600 metadata |
 | `src/common/render.py` | numpy z-buffer renderer (no OpenGL), PNG and GIF |
 | `src/common/slicer.py` | Optional PrusaSlicer CLI step: times, M600 and support checks, projects |
@@ -102,6 +102,9 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
   the jaw strip, the teeth and the shoulder stop are added back exactly
   (`body_extra_local`). That keeps the head round and the stop face exact. The stop face
   reaches `STOP_MARGIN` past the point where the pad lands (`stop_contact`).
+- Desk version: a card is much wider than the jaw, so it stands on the desk with one end
+  in the jaw and the rest along a groove in the floe (`CARD_GROOVE`). `desk_card()` places
+  it and opens only the right flipper under the "jaw" load; a test checks that it fits.
 - Comb teeth: `TOOTH_W = lines(2)`, side gap and tip gap 0.5 mm, overlap `PRELOAD`. The
   overlap is the preload: at rest the jaw is "closed past zero".
 - The forces are small (0.04-0.15 N on a thin card at the tip, see README). That is the

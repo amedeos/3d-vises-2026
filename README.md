@@ -33,7 +33,7 @@ All the numbers come from `src/tux_clip/model.py`. It does not treat the leaf as
 
 ### Desk version
 
-Tux lies on his back on a small ice floe and holds a card upright in his flipper. Squeeze his shoulder, drop the card into the slot and let go. It is still one piece: the floe leaves room for the flippers to swing.
+Tux lies on his back on a small ice floe and holds a card upright in his flipper. Squeeze his shoulder, stand the card on the desk with one end in the jaw, and let go: the rest of the card's bottom edge runs along the groove in the floe. It is still one piece: the floe leaves room for the flippers to swing.
 
 It holds a business card or a 10 × 15 cm photo. **It cannot hold a phone**: a phone is about 70 times heavier than a photo and would tip over (a test checks this limit).
 

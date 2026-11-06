@@ -122,10 +122,12 @@ def test_nothing_collides_over_the_swing(size, load):
     """From rest to the stop, under either load: the leaf, the flipper and the body never
     overlap, and the flipper only touches the body at the stop."""
     m = mechanism(size)
-    for k in range(9):
-        theta = m.stop(load) * k / 8
+    stop = m.stop(load)
+    # sweep_local cuts the body with poses at stop * k / 16: test the poses in between
+    thetas = [0.0] + [stop * j / 32 for j in range(1, 32, 4)] + [stop * 31 / 32, stop]
+    for theta in thetas:
         assert abs(_overlap(m, theta, load)) < 0.05, f"{size}: overlap at {theta:.3f} rad"
-        if 0 < k < 8:
+        if 0 < theta < stop:
             assert flipper_placed(m, theta, load).distance_to(body_profile(m)) > 0.0
 
 
@@ -192,6 +194,22 @@ def test_desk_holds_a_photo_upright():
     assert card_hold_margin(3.0, 150.0, 0.3) > 1.0
     # a business card (about 1 g, 0.4 mm, 55 mm high)
     assert card_hold_margin(1.0, 55.0, 0.4) > 1.0
+
+
+def test_desk_card_stands_in_the_jaw():
+    """The card used in the listing really fits: it stands on the desk (z = 0), one end
+    in the jaw over most of its length, the rest along the groove in the floe, and it
+    touches nothing with the right flipper opened by the card."""
+    from tux_clip.model import desk_card, desk_colours
+
+    card, theta = desk_card()
+    black = desk_colours(theta, "jaw", right_only=True)[0][0]
+    common = black & card
+    assert (sum(s.volume for s in common.solids()) if common else 0.0) < 0.01
+    assert card.bounding_box().min.Z == pytest.approx(0.0, abs=1e-6)
+    m = mechanism(P.DESK_SIZE)
+    assert m.a_tip - (m.L / 2 + P.BRIDGE) > 8.0  # a jaw of 8 mm or more grips the card
+    assert m.opening_at(theta, "jaw") < m.opening  # a squeeze opens the jaw that far
 
 
 def test_desk_cannot_hold_a_phone():

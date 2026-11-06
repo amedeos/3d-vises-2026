@@ -85,6 +85,9 @@ DESK_SIZE = "M"
 T_BASE = layers(12)  # 2.4 mm thick base plate, solid
 BASE_MARGIN = 9.0  # the floe reaches this far around Tux
 FLIPPER_CLEARANCE = 1.0  # free space around the swept area of each flipper
+# A card stands on the desk with one end in the jaw; the rest of its bottom edge runs
+# along this groove through the floe, which continues the jaw line past the flipper tip.
+CARD_GROOVE = 3.0
 
 # --- flexure coupon: three short levers with 2, 3 and 4 line leaves -----------------------
 COUPON_LINES = (2, 3, 4)
