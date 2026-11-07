@@ -75,6 +75,7 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
 | `src/tux_vise/export.py`, `render.py`, `slicer.py` | Entry points (`python -m tux_vise.<name>`). `export.thread_zones()` lists the threads the width tests skip. |
 | `tests/conftest.py` | `MODELS`: the model packages the tests run on. Each `<model>.export` provides `printable_parts()`, `colour_parts()`, `plates()`, `PLANNED_M600`, `THIN_FEATURES`, `GAPS`. |
 | `tests/` | pytest suite. Keep it green. |
+| `docs/photos/` | Photos of real prints, used in the README. Small JPEGs (about 100 KB), no EXIF. |
 
 ## Tux Clip mechanism (do not break it)
 

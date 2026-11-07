@@ -2,6 +2,10 @@
 
 Two entries for the Printables contest **[Designer Challenge: Vises](https://www.printables.com/contest/534-vises)**.
 
+![A printed Tux Clip, size M, holding a sheet of paper on the print sheet of a Prusa MK4](docs/photos/tux_clip_M_card.jpg)
+
+*Tux Clip M, printed on a Prusa MK4 in Prusament PETG (black, white and Yellow Gold), holds a sheet of paper.*
+
 Both models are Tux, the Linux penguin. They print without supports, need no screws, springs or other hardware, and get their colours from filament changes (M600) on a single-extruder printer.
 
 The models are fully parametric. They are written in Python with [build123d](https://github.com/gumyr/build123d), and both share one code base.
@@ -11,6 +15,10 @@ The models are fully parametric. They are written in Python with [build123d](htt
 A small clip shaped like Tux. **Squeeze his shoulders and his flippers open.** Let go and they close on whatever you put under them: a note, a photo, a ticket, a cable, the top of a bag.
 
 It is one piece, printed in place: no assembly, nothing to snap in. It comes in three sizes, plus a desk version that holds a card upright, and a small coupon to feel the stiffness of the flexure.
+
+![A printed Tux Clip, size M, at rest on the textured sheet: black body, white belly and eyes, yellow beak and feet](docs/photos/tux_clip_M.jpg)
+
+*Tux Clip M straight off the textured sheet, at rest: the comb teeth of the flippers mesh with the body.*
 
 
 ### How it works
