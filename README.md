@@ -14,6 +14,8 @@ The models are fully parametric. They are written in Python with [build123d](htt
 
 A small clip shaped like Tux. **Squeeze his shoulders and his flippers open.** Let go and they close on whatever you put under them: a note, a photo, a ticket, a cable, the top of a bag.
 
+**Download it on Printables:** [Tux Clip – Linux penguin print-in-place clip](https://www.printables.com/model/1905042-tux-clip-linux-penguin-print-in-place-clip)
+
 It is one piece, printed in place: no assembly, nothing to snap in. It comes in three sizes, plus a desk version that holds a card upright, and a small coupon to feel the stiffness of the flexure.
 
 ![A printed Tux Clip, size M, at rest on the textured sheet: black body, white belly and eyes, yellow beak and feet](docs/photos/tux_clip_M.jpg)
