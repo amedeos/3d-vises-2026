@@ -136,7 +136,7 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
   floor; pulling, the 45-degree cone under the head presses the fork. `head_play()` is
   computed from that geometry; the engagement is checked in both positions.
 - **Stops.** Fully open, the jaw's back meets the end block (`X_END`); closed, its face meets
-  the white belly (`X_BELLY` = opening 0). The beak and feet stand `T_ORANGE` proud: the
+  the white belly (`X_BELLY` = opening 0). The beak and feet stand `T_YELLOW` proud: the
   jaw's top stays 1.5 mm under the beak (`jaw_top()`) and its lower front steps back over
   the feet.
 - **45-degree roofs.** Horizontal holes in upright parts are teardrops

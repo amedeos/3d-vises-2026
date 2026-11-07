@@ -474,7 +474,7 @@ def _clip_colours(size: str, theta: float, load: str = "squeeze",
     tux = tux_profile(m.height)
     black = extrude(clip_profile(m, theta, load, right_only), P.T_BODY, dir=(0, 0, 1))
     white = Pos(0, 0, P.Z_WHITE) * extrude(tux.white, P.T_WHITE, dir=(0, 0, 1))
-    yellow = Pos(0, 0, P.Z_ORANGE) * extrude(tux.yellow, P.T_ORANGE, dir=(0, 0, 1))
+    yellow = Pos(0, 0, P.Z_YELLOW) * extrude(tux.yellow, P.T_YELLOW, dir=(0, 0, 1))
     return ((black, "black"), (white, "white"), (yellow, "yellow"))
 
 

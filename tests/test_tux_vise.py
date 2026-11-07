@@ -172,7 +172,7 @@ def test_jaw_stays_on_the_rail(opening):
 
 def test_feet_recess_covers_the_feet():
     assert P.JAW_Z0 + 0.0 < feet_top() < P.JAW_Z0 + 20
-    assert P.FEET_RECESS >= P.T_ORANGE + 0.5
+    assert P.FEET_RECESS >= P.T_YELLOW + 0.5
 
 
 # --- collisions -----------------------------------------------------------------------------

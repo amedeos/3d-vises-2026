@@ -27,12 +27,12 @@ from common.grid import FIRST_LAYER, LAYER, LINE_W, layer_top, layers, lines, sn
 TUX_H = 64.0  # Tux height, feet to head
 T_TUX = layers(30)  # 6.0 mm black plate
 T_WHITE = layers(3)  # 0.6 mm white: the belly is the face of the fixed jaw
-T_ORANGE = layers(2)  # 0.4 mm yellow: beak and feet stand this far proud of the belly
+T_YELLOW = layers(2)  # 0.4 mm yellow: beak and feet stand this far proud of the belly
 Z_WHITE = T_TUX  # colour boundary black -> white (print pose)
-Z_ORANGE = T_TUX + T_WHITE  # colour boundary white -> yellow
+Z_YELLOW = T_TUX + T_WHITE  # colour boundary white -> yellow
 # M600 heights (print_z of the first layer of the new colour). Only Tux changes colour.
 M600_WHITE = layer_top(Z_WHITE)
-M600_ORANGE = layer_top(Z_ORANGE)
+M600_YELLOW = layer_top(Z_YELLOW)
 TENON_W = 20.0  # tab under Tux's feet that plugs into the base
 CLR_FIT = 0.15  # per side: tenon in its mortise, nut in its pocket
 
@@ -88,7 +88,7 @@ Z_AXIS = POCKET_FLOOR + NUT_W / 2  # 26.0: the screw axis
 JAW_T = 18.0  # length along x
 JAW_Z0 = T_PLATE + layers(3)  # 8.6: bottom of the jaw, clear of the plate
 FACE_T = 3.0  # front plate, between the clamping face and the head chamber
-FEET_RECESS = 1.0  # the lower front steps back over Tux's feet (they stand T_ORANGE proud)
+FEET_RECESS = 1.0  # the lower front steps back over Tux's feet (they stand T_YELLOW proud)
 
 # --- screw head and the fork that holds it --------------------------------------------
 HEAD_D = 11.0
@@ -114,8 +114,8 @@ GNU_R = 24.0
 # --- layout along x (assembly), derived ----------------------------------------------------
 X_TUX = BACK_T  # Tux's back
 X_BELLY = X_TUX + T_TUX + T_WHITE  # the white belly: opening 0
-X_ORANGE = X_TUX + T_TUX + T_WHITE + T_ORANGE  # beak and feet
-X_RAIL0 = X_ORANGE + 0.4  # the rail starts in front of Tux's feet
+X_YELLOW = X_TUX + T_TUX + T_WHITE + T_YELLOW  # beak and feet
+X_RAIL0 = X_YELLOW + 0.4  # the rail starts in front of Tux's feet
 X_END = X_BELLY + OPEN_MAX + JAW_T  # end block inner face: the jaw stops here
 X_POCKET0 = X_END + WALL_IN
 X_POCKET1 = X_POCKET0 + NUT_L + 2 * CLR_FIT

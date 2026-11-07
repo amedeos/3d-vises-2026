@@ -1,6 +1,6 @@
 """Export Tux Vise: STL files (out/stl/tux_vise) and 3MF plates (out/3mf/tux_vise).
 
-Only Tux changes colour: white at layer_top(Z_WHITE) and yellow at layer_top(Z_ORANGE),
+Only Tux changes colour: white at layer_top(Z_WHITE) and yellow at layer_top(Z_YELLOW),
 already set in his 3MF. Every other plate prints in one colour.
 
 Exits with status 1 if any part fails a check.
@@ -32,8 +32,8 @@ from .model import (
 )
 
 MODEL = "tux_vise"
-M600_WHITE, M600_ORANGE = P.M600_WHITE, P.M600_ORANGE  # defined in params.py
-CHANGES: list[Change] = [(M600_WHITE, "white"), (M600_ORANGE, "yellow")]
+M600_WHITE, M600_YELLOW = P.M600_WHITE, P.M600_YELLOW  # defined in params.py
+CHANGES: list[Change] = [(M600_WHITE, "white"), (M600_YELLOW, "yellow")]
 
 # Declared widths, checked by the tests: thin features must be whole lines (2 or more),
 # gaps at least one line. The vise has no thin walls; its narrowest holes are these.
@@ -138,7 +138,7 @@ def plates() -> Plates:
 def export_all(out: Path) -> dict[str, list[str]]:
     report = export_model(out, MODEL, printable_parts(), plates())
     print(f"\nColour changes (M600, 0.2 mm layers): Tux only, white at Z = {M600_WHITE:.2f} mm, "
-          f"yellow at Z = {M600_ORANGE:.2f} mm. The 3MF plate already has them.")
+          f"yellow at Z = {M600_YELLOW:.2f} mm. The 3MF plate already has them.")
     return report
 
 

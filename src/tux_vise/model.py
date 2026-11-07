@@ -83,7 +83,7 @@ def tux_colours() -> tuple[tuple[Part, str], ...]:
     filled = close_crevices(tux.body + tenon) & (Pos(0, 50) * Rectangle(200, 100))
     black = extrude(filled + tenon, P.T_TUX, dir=(0, 0, 1))
     white = Pos(0, 0, P.Z_WHITE) * extrude(tux.white, P.T_WHITE, dir=(0, 0, 1))
-    yellow = Pos(0, 0, P.Z_ORANGE) * extrude(tux.yellow, P.T_ORANGE, dir=(0, 0, 1))
+    yellow = Pos(0, 0, P.Z_YELLOW) * extrude(tux.yellow, P.T_YELLOW, dir=(0, 0, 1))
     return ((black, "black"), (white, "white"), (yellow, "yellow"))
 
 

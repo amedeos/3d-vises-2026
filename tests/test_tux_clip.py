@@ -165,7 +165,7 @@ def test_print_time_budget(size):
 def test_tux_still_reads_in_one_colour():
     """The reliefs are at least 2 layers high, and the pupils at least 2 lines wide even
     on the smallest Tux, so a one-colour print still shows the face, belly and feet."""
-    assert P.T_WHITE >= layers(2) and P.T_ORANGE >= layers(2)
+    assert P.T_WHITE >= layers(2) and P.T_YELLOW >= layers(2)
     small = tux_profile(min(s["height"] for s in P.SIZES.values()))
     pupil = small.pupils.faces()[0].bounding_box()
     assert min(pupil.size.X, pupil.size.Y) >= lines(2)
