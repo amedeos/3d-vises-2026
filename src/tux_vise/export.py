@@ -20,6 +20,7 @@ from .model import (
     make_foot_screw,
     make_fork,
     make_gauge,
+    make_ice,
     make_jaw,
     make_nut,
     make_screw,
@@ -45,9 +46,10 @@ GAPS = {"gnu eyes and nostrils": P.lines(4),
 
 # Suggested colours. Tux has three (M600); every other plate prints in one colour, so the
 # parts that share a plate share a colour.
-COLOUR = {"tux_vise_tux": "black", "tux_vise_base": "blue", "tux_vise_jaw": "black",
-          "tux_vise_fork": "black", "tux_vise_nut": "black", "tux_vise_screw": "yellow",
-          "tux_vise_foot": "blue", "tux_vise_foot_screw": "blue", "tux_vise_foot_nut": "blue",
+COLOUR = {"tux_vise_tux": "black", "tux_vise_base": "white", "tux_vise_ice": "white",
+          "tux_vise_jaw": "black", "tux_vise_fork": "black", "tux_vise_nut": "black",
+          "tux_vise_screw": "yellow", "tux_vise_foot": "white", "tux_vise_foot_screw": "white",
+          "tux_vise_foot_nut": "white",
           "coupon_thread_gauge": "yellow", "coupon_thread_stub": "yellow"}
 
 
@@ -86,6 +88,7 @@ def printable_parts() -> dict[str, Part]:
     return {
         "tux_vise_tux": make_tux(),
         "tux_vise_base": make_base(),
+        "tux_vise_ice": make_ice(),
         "tux_vise_jaw": make_jaw(),
         "tux_vise_fork": make_fork(),
         "tux_vise_nut": make_nut(),
@@ -119,18 +122,18 @@ def plates() -> Plates:
         placed = [centred(parts[0])] if len(parts) == 1 else row(parts)
         return [(n, p, colour or COLOUR[n]) for n, p in zip(names, placed)]
 
-    one_colour = ["tux_vise_base", "tux_vise_jaw", "tux_vise_fork", "tux_vise_nut",
-                  "tux_vise_screw"]
+    one_colour = ["tux_vise_base", "tux_vise_ice", "tux_vise_jaw", "tux_vise_fork",
+                  "tux_vise_nut", "tux_vise_screw"]
 
     return {
         "tux_vise_tux": (plate(["tux_vise_tux"]), PLANNED_M600["tux_vise_tux"]),
-        "tux_vise_base": (plate(["tux_vise_base"]), []),
+        "tux_vise_base": (plate(["tux_vise_base", "tux_vise_ice"]), []),
         "tux_vise_jaw": (plate(["tux_vise_jaw", "tux_vise_fork", "tux_vise_nut"]), []),
         "tux_vise_screw": (plate(["tux_vise_screw"]), []),
         # everything but Tux on one plate, in one colour: faster than the three plates
         "tux_vise_parts_one_colour": (plate(one_colour, "black"), []),
         "tux_vise_foot": (plate(["tux_vise_foot", "tux_vise_foot_screw", "tux_vise_foot_nut"],
-                                "blue"), []),
+                                "white"), []),
         "coupon_thread": (plate(["coupon_thread_gauge", "coupon_thread_stub"]), []),
     }
 

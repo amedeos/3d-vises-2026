@@ -140,6 +140,14 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
   the white belly (`X_BELLY` = opening 0). The beak and feet stand `T_YELLOW` proud: the
   jaw's top stays 1.5 mm under the beak (`jaw_top()`) and its lower front steps back over
   the feet.
+- **Assembly path.** Every part must have a way into the vise, not only a place in it. The
+  jaw is lowered into the free space between the backstop and the start of the rail
+  (`JAW_T + CLR_INSERT` at least) and slid along; then the ice block and Tux drop into
+  their slots, the nut into its pocket and the fork into its slot. The ice block (`ICE_T`)
+  exists to fill that space once the jaw is on: Tux leans on the ice, the ice on the
+  backstop. The assembly tests in `test_tux_vise.py` follow each part along its way in.
+  (Nov 2026: the first printed base had 7.5 mm there for an 18 mm jaw, so the jaw could not
+  go on, and every test passed.)
 - **45-degree roofs.** Horizontal holes in upright parts are teardrops
   (`common.shapes.teardrop`). The jaw's rail slot has a 45-degree gable instead of a flat
   ceiling. Where two 45-degree roofs cross, the line where they meet is flatter than 45

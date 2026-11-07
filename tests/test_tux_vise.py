@@ -12,6 +12,7 @@ import pytest
 from build123d import Align, Cone, Cylinder, Part, Pos
 
 from common.grid import LINE_W, lines
+from common.shapes import box_between
 from tux_vise import params as P
 from tux_vise.kinematics import (
     engaged_turns,
@@ -165,7 +166,7 @@ def test_jaw_stops_on_the_end_block_and_on_the_belly():
 @pytest.mark.parametrize("opening", OPENINGS)
 def test_jaw_stays_on_the_rail(opening):
     """The rail runs under the whole jaw slot over the full travel (the jaw can only leave
-    the rail at the Tux end, and Tux blocks it)."""
+    the rail at the Tux end, and Tux and the ice block are in the way)."""
     assert P.X_RAIL0 <= jaw_x(opening) + 1.0
     assert jaw_x(opening) + P.JAW_T <= P.X_END + 1e-9
 
@@ -200,17 +201,17 @@ def screw_envelope(opening: float, play: float = 0.0) -> Part:
 
 @pytest.mark.parametrize("opening", OPENINGS)
 def test_nothing_collides_over_the_travel(opening):
-    """Tux, base, jaw, fork and nut never overlap (Tux's soles stand on the base: up to
-    0.05 mm3 of contact). The screw's envelope touches none of them except the nut, whose
+    """Tux, the ice block, base, jaw, fork and nut never overlap (Tux's soles and the ice
+    stand on the base: up to 0.05 mm3 of contact). The screw's envelope touches none of them except the nut, whose
     thread it enters. Pulling, the head moves out by head_play() and its cone meets the
     fork: that contact is the design, so the fork is left out there."""
     parts = assembly(opening)
-    names = ["tux", "base", "jaw", "fork", "nut"]
+    names = ["tux", "ice", "base", "jaw", "fork", "nut"]
     for i, a in enumerate(names):
         for b in names[i + 1:]:
             assert _volume(parts[a], parts[b]) < 0.05, (opening, a, b)
-    for play, others in ((0.0, ["tux", "base", "jaw", "fork"]),
-                         (head_play(), ["tux", "base", "jaw"])):
+    for play, others in ((0.0, ["tux", "ice", "base", "jaw", "fork"]),
+                         (head_play(), ["tux", "ice", "base", "jaw"])):
         screw = screw_envelope(opening, play)
         for name in others:
             assert _volume(screw, parts[name]) < 0.01, (opening, play, name)
@@ -254,7 +255,60 @@ def test_nut_is_captive():
 
 
 def test_vise_length():
-    assert 80.0 <= P.BASE_L <= 90.0
+    assert 90.0 <= P.BASE_L <= 100.0
+
+
+# --- assembly: every part has a way in -----------------------------------------------------
+# The first printed base had 7.5 mm between the backstop and the rail for an 18 mm jaw: every
+# part fitted in its final place, but the jaw could not get there. These tests follow each
+# part along its way in.
+
+def _clear(obstacle: Part, x0, x1, y0, y1, z0, z1=200.0) -> bool:
+    """Nothing of `obstacle` inside the box."""
+    return _volume(obstacle, box_between(x0, x1, y0, y1, z0, z1)) < 0.01
+
+
+def test_jaw_goes_onto_the_rail():
+    """The jaw is lowered into the free space between the backstop and the start of the
+    rail, which is longer than the jaw, then slid along the rail into its travel. Nothing of
+    the base stands above the plate in that space, and the jaw touches the base nowhere on
+    the way."""
+    space0, space1 = P.X_ICE - P.CLR_FIT, P.X_RAIL0
+    assert space1 - space0 >= P.JAW_T + P.CLR_INSERT - 1e-9
+    base, jaw = make_base(), make_jaw()
+    jb = jaw.bounding_box()
+    assert _clear(base, space0, space1, jb.min.Y - 1, jb.max.Y + 1, P.T_PLATE + 0.01)
+    face = space0 + P.CLR_INSERT / 2  # where the jaw's face is when it goes down
+    stations = [face + k for k in range(int(jaw_x(0.0) - face) + 1)] + [jaw_x(0.0)]
+    for x in stations:
+        assert _volume(Pos(x, 0, P.JAW_Z0) * jaw, base) < 0.01, x
+
+
+@pytest.mark.parametrize("name, obstacles", [("ice", ["base", "jaw"]),
+                                             ("tux", ["base", "jaw", "ice"])])
+def test_ice_and_tux_drop_into_their_slots(name, obstacles):
+    """With the jaw on the rail and open, the ice block and then Tux go in from above.
+    Nothing stands over them, and the tab under each one drops straight through its slot in
+    the plate."""
+    parts = assembly(P.OPEN_MAX)
+    part = parts[name]
+    bb = part.bounding_box()
+    for other in obstacles:
+        assert _clear(parts[other], bb.min.X, bb.max.X, bb.min.Y, bb.max.Y,
+                      P.T_PLATE + 0.01), other
+    tab = (part & box_between(-50, 200, -50, 50, -1, P.T_PLATE - 0.05)).bounding_box()
+    assert _clear(parts["base"], tab.min.X, tab.max.X, tab.min.Y, tab.max.Y, tab.min.Z,
+                  P.T_PLATE + 0.01)
+
+
+def test_nut_and_fork_drop_in():
+    """The nut drops into its pocket, open at the top; the fork drops into its slot in the
+    jaw, open at the top."""
+    parts = assembly(P.OPEN_MAX)
+    nut = parts["nut"].bounding_box()
+    assert _clear(parts["base"], nut.min.X, nut.max.X, nut.min.Y, nut.max.Y, nut.min.Z)
+    fork = parts["fork"].bounding_box()
+    assert _clear(parts["jaw"], fork.min.X, fork.max.X, fork.min.Y, fork.max.Y, fork.min.Z)
 
 
 # --- desk foot ------------------------------------------------------------------------------

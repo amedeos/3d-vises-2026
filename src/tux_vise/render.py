@@ -47,7 +47,7 @@ def vise_items(opening: float, with_board: bool = False):
     # screw's print axis) drives it towards Tux
     angle = 360.0 * turns_to_close(opening)
     items = [(use_location("tux") * part, colour) for part, colour in tux_colours()]
-    for name in ("base", "jaw", "fork", "nut"):
+    for name in ("ice", "base", "jaw", "fork", "nut"):
         items.append((use_location(name, opening) * VISE_PARTS[name](), COLOUR[f"tux_vise_{name}"]))
     screw = use_location("screw", opening) * (Rot(0, 0, angle) * VISE_PARTS["screw"]())
     items.append((screw, COLOUR["tux_vise_screw"]))

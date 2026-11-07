@@ -3,6 +3,7 @@
 Print poses (each part rests on z = 0):
 
 - Tux: on his back, like the clip. Black plate, white and yellow reliefs on top.
+- ice block: on its side, its (x, z) profile on the bed.
 - base: upright, as used.
 - jaw: upright, as used, shifted down by JAW_Z0.
 - fork: flat.
@@ -149,13 +150,18 @@ def make_base() -> Part:
     rail = _yz(polygon(*rail_points()), P.X_RAIL0, P.X_END + 0.5)
     bw, bh, ch = P.BACK_W / 2, P.BACK_H, 6.0  # backstop with 45-degree shoulders
     back = _yz(polygon((-bw, 0), (bw, 0), (bw, bh - ch), (bw - ch, bh), (-bw + ch, bh),
-                     (-bw, bh - ch)), 0, P.X_TUX - P.CLR_FIT)
+                     (-bw, bh - ch)), 0, P.X_ICE - P.CLR_FIT)
     ew = P.NUT_W / 2 + P.CLR_FIT + P.WALL_SIDE
     block = box_between(P.X_END, P.BASE_L, -ew, ew, 0, end_block_top())
     base = plate + rail + back + block
     # mortise for Tux's tab, through the plate
     tw = P.TENON_W / 2 + P.CLR_FIT
     base -= box_between(P.X_TUX - P.CLR_FIT, P.X_TUX + P.T_TUX + P.CLR_FIT, -tw, tw, -1,
+                        P.T_PLATE + 1)
+    # mortise for the ice block's tab, through the plate
+    t0, t1 = ice_tab_x()
+    iw = P.BACK_W / 2 + P.CLR_FIT
+    base -= box_between(P.X_ICE + t0 - P.CLR_FIT, P.X_ICE + t1 + P.CLR_FIT, -iw, iw, -1,
                         P.T_PLATE + 1)
     # nut pocket, open at the top, and the screw's hole through both walls
     pw = P.NUT_W / 2 + P.CLR_FIT
@@ -164,6 +170,32 @@ def make_base() -> Part:
     base -= _bore_x(P.THREAD_D / 2 + P.CLR_BORE, P.X_END - 1, P.BASE_L + 1, 0, P.Z_AXIS)
     base.label = "tux_vise_base"
     return base
+
+
+# --- ice block: between the backstop and Tux --------------------------------------------
+
+def ice_tab_x() -> tuple[float, float]:
+    """x of the ice block's tab, from the block's back face."""
+    return (P.ICE_T - P.ICE_TAB_T) / 2, (P.ICE_T + P.ICE_TAB_T) / 2
+
+
+def ice_profile() -> list[tuple[float, float]]:
+    """(x, z) outline of the ice block seen from the side: x from its back face, z as in
+    the vise. A rough top, and a tab under it that stops 0.4 mm above the bottom of the
+    base, like Tux's."""
+    t0, t1 = ice_tab_x()
+    t, h, z_tab = P.ICE_T, P.BACK_H, P.T_PLATE - tenon_depth()
+    return [(t0, z_tab), (t1, z_tab), (t1, P.T_PLATE), (t, P.T_PLATE), (t, h - 1.0),
+            (t - 3.5, h - 3.5), (t - 6.0, h), (2.5, h - 3.0), (0.0, h - 0.5),
+            (0.0, P.T_PLATE), (t0, P.T_PLATE)]
+
+
+@cache
+def make_ice() -> Part:
+    """The ice block in its print pose: on its side, the side profile on the bed."""
+    ice = extrude(polygon(*ice_profile()), P.BACK_W, dir=(0, 0, 1))
+    ice.label = "tux_vise_ice"
+    return ice
 
 
 # --- the moving jaw (a flipper) and the fork ---------------------------------------------
@@ -338,6 +370,9 @@ def use_location(name: str, opening: float = 0.0) -> Location:
         return _standing(P.X_TUX, 0, P.T_PLATE).location
     if name == "base":
         return Location()
+    if name == "ice":  # print x -> x, print y -> z, print z -> -y
+        return Plane(origin=(P.X_ICE, P.BACK_W / 2, 0), x_dir=(1, 0, 0),
+                     z_dir=(0, -1, 0)).location
     if name == "jaw":
         return Location((jaw_x(opening), 0, P.JAW_Z0))
     if name == "fork":  # resting on the floor of its slot
@@ -353,8 +388,8 @@ def use_location(name: str, opening: float = 0.0) -> Location:
     raise KeyError(name)
 
 
-VISE_PARTS = {"tux": make_tux, "base": make_base, "jaw": make_jaw, "fork": make_fork,
-              "nut": make_nut, "screw": make_screw}
+VISE_PARTS = {"tux": make_tux, "ice": make_ice, "base": make_base, "jaw": make_jaw,
+              "fork": make_fork, "nut": make_nut, "screw": make_screw}
 
 
 def assembly(opening: float = 0.0) -> dict[str, Part]:

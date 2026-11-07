@@ -4,7 +4,8 @@ Assembly frame ("use"): x runs along the screw, from Tux (x = 0 side) to the gnu
 y across; z up; the bottom of the base on z = 0.
 
 - Tux (the fixed jaw) stands at the x = 0 end, his belly facing +x. He prints on his back
-  with black, white and yellow (two M600), like the clip, and plugs into the base.
+  with black, white and yellow (two M600), like the clip, and plugs into the base. Behind
+  him an ice block, also plugged into the base, leans on the backstop.
 - The base carries a dovetail rail along x and, at the far end, the end block with the
   nut pocket.
 - The moving jaw is a flipper. It slides on the rail; its face is the clamping face.
@@ -40,9 +41,19 @@ CLR_FIT = 0.15  # per side: tenon in its mortise, nut in its pocket
 BASE_W = 40.0  # width at the bottom
 T_PLATE = layers(40)  # 8.0 mm plate
 BEVEL = 2.0  # 45-degree bevel on the two long bottom edges (the desk foot holds them)
-BACK_T = 5.0  # backstop behind Tux (Tux leans on it when the vise clamps)
+BACK_T = 5.0  # backstop behind the ice block (Tux leans on the ice, the ice on it)
 BACK_W = 26.0
 BACK_H = 34.0
+
+# --- ice block, between the backstop and Tux --------------------------------------------
+# The jaw goes onto the rail at Tux's end: it is lowered into the free space between the
+# backstop and the start of the rail, then slid along. That space must be longer than the
+# jaw (JAW_T + CLR_INSERT), so once the jaw is on, an ice block fills it and Tux stands in
+# front of the ice. Both plug into slots through the plate. The ice prints on its side:
+# its (x, z) profile on the bed, BACK_W tall.
+ICE_T = 12.0  # along x
+ICE_TAB_T = 5.0  # the tab under the ice, along x (it is BACK_W wide, like the block)
+CLR_INSERT = 1.5  # the free space is at least this much longer than the jaw (hand-guided)
 
 # --- dovetail rail along x, on the plate (same profile as the Halloween coffin rail) ---
 RAIL_STEM_W = 6.0
@@ -112,7 +123,8 @@ KNOB_R = Z_AXIS - 2.0  # the vise's knob must turn within this radius, clear of 
 GNU_R = 24.0
 
 # --- layout along x (assembly), derived ----------------------------------------------------
-X_TUX = BACK_T  # Tux's back
+X_ICE = BACK_T  # the ice block's back (the backstop ends CLR_FIT before it)
+X_TUX = X_ICE + ICE_T + CLR_FIT  # Tux's back
 X_BELLY = X_TUX + T_TUX + T_WHITE  # the white belly: opening 0
 X_YELLOW = X_TUX + T_TUX + T_WHITE + T_YELLOW  # beak and feet
 X_RAIL0 = X_YELLOW + 0.4  # the rail starts in front of Tux's feet
