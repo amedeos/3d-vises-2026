@@ -5,11 +5,11 @@ along Z, so the flexures are vertical walls that bend in the XY plane. They bend
 their extrusion lines, never across the layers.
 
 Colours are stacked along Z (one M600 before the first white layer, one before the first
-orange layer):
+yellow layer):
 
 - black  0 -> T_BODY: the whole silhouette, the flippers, the flexures and the jaw teeth
 - white  T_BODY -> T_BODY + T_WHITE: belly, eyes, and pads under the beak and the feet
-- orange -> + T_ORANGE: beak and feet
+- yellow -> + T_ORANGE: beak and feet
 
 How it works: each flipper is a lever on a leaf flexure (a thin vertical wall). Above
 the flexure is the shoulder pad, below it is the jaw. Squeeze the two shoulders towards
@@ -39,11 +39,11 @@ PETG_SAFE_STRAIN = 0.5 * PETG_YIELD_STRAIN
 # --- thickness and colours (print orientation: on the back) --------------------------
 T_BODY = layers(24)  # 4.8 mm of black: the flexure height
 T_WHITE = layers(3)  # 0.6 mm of white relief
-T_ORANGE = layers(3)  # 0.6 mm of orange relief
+T_ORANGE = layers(3)  # 0.6 mm of yellow relief
 Z_WHITE = T_BODY  # colour boundary black -> white (4.8 mm)
-Z_ORANGE = T_BODY + T_WHITE  # colour boundary white -> orange (5.4 mm)
+Z_ORANGE = T_BODY + T_WHITE  # colour boundary white -> yellow (5.4 mm)
 # M600 heights: PrusaSlicer's print_z of the first layer of the new colour. Every clip
-# plate and the desk plate change to white at 5.00 mm and to orange at 5.60 mm; the
+# plate and the desk plate change to white at 5.00 mm and to yellow at 5.60 mm; the
 # flexure coupon has no colour change.
 M600_WHITE = layer_top(Z_WHITE)
 M600_ORANGE = layer_top(Z_ORANGE)

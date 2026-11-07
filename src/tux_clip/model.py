@@ -474,15 +474,15 @@ def _clip_colours(size: str, theta: float, load: str = "squeeze",
     tux = tux_profile(m.height)
     black = extrude(clip_profile(m, theta, load, right_only), P.T_BODY, dir=(0, 0, 1))
     white = Pos(0, 0, P.Z_WHITE) * extrude(tux.white, P.T_WHITE, dir=(0, 0, 1))
-    orange = Pos(0, 0, P.Z_ORANGE) * extrude(tux.orange, P.T_ORANGE, dir=(0, 0, 1))
-    return ((black, "black"), (white, "white"), (orange, "orange"))
+    yellow = Pos(0, 0, P.Z_ORANGE) * extrude(tux.yellow, P.T_ORANGE, dir=(0, 0, 1))
+    return ((black, "black"), (white, "white"), (yellow, "yellow"))
 
 
 @cache
 def make_clip(size: str) -> Part:
     """The printable clip (one piece, print-in-place)."""
-    black, white, orange = (p for p, _ in clip_colours(size))
-    clip = black + white + orange
+    black, white, yellow = (p for p, _ in clip_colours(size))
+    clip = black + white + yellow
     clip.label = f"tux_clip_{size}"
     return clip
 
@@ -550,8 +550,8 @@ def desk_card(thickness: float = 0.4, width: float = 85.0,
 
 @cache
 def make_desk() -> Part:
-    black, white, orange = (p for p, _ in desk_colours())
-    desk = black + white + orange
+    black, white, yellow = (p for p, _ in desk_colours())
+    desk = black + white + yellow
     desk.label = "tux_clip_desk"
     return desk
 

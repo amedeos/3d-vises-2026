@@ -147,7 +147,7 @@ def test_render_poses_stay_within_the_travel(opening):
 
 def test_jaw_stops_on_the_end_block_and_on_the_belly():
     """Fully open, the jaw's back meets the end block (a base feature). Closed, its face
-    meets Tux's white belly and stays clear of the orange feet."""
+    meets Tux's white belly and stays clear of the yellow feet."""
     base, jaw = make_base(), make_jaw()
     open_jaw = use_location("jaw", P.OPEN_MAX) * jaw
     assert _volume(open_jaw, base) < 0.01
@@ -157,9 +157,9 @@ def test_jaw_stops_on_the_end_block_and_on_the_belly():
     assert _volume(closed, tux) < 0.01
     assert _volume(Pos(-0.3, 0, 0) * closed, tux) > 0.1
     white = use_location("tux") * tux_colours()[1][0]
-    orange = use_location("tux") * tux_colours()[2][0]
+    yellow = use_location("tux") * tux_colours()[2][0]
     assert _volume(Pos(-0.3, 0, 0) * closed, white) > 0.1  # the belly is the jaw face
-    assert _volume(Pos(-0.3, 0, 0) * closed, orange) < 0.01  # the feet sit in the recess
+    assert _volume(Pos(-0.3, 0, 0) * closed, yellow) < 0.01  # the feet sit in the recess
 
 
 @pytest.mark.parametrize("opening", OPENINGS)

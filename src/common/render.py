@@ -11,7 +11,7 @@ from PIL import Image
 
 COLORS = {
     "black": (0.10, 0.09, 0.11),
-    "orange": (0.95, 0.42, 0.06),
+    "yellow": (0.96, 0.70, 0.10),  # Prusament PETG Yellow Gold (approximate)
     "white": (0.92, 0.90, 0.84),
     "grey": (0.45, 0.44, 0.47),
     "blue": (0.23, 0.45, 0.70),

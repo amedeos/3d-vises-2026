@@ -5,8 +5,8 @@ All shapes are in the XY plane: x to the right, y up, feet on y=0, centre line o
 The numbers below are fractions of the height H; `tux_profile(H)` scales them.
 
 Colours are stacked in Z when the part prints on its back (see the model packages):
-black body, then white (belly, eyes, and pads under the beak and feet), then orange
-(beak, feet). So every white region lies inside the black body and every orange region
+black body, then white (belly, eyes, and pads under the beak and feet), then yellow
+(beak, feet). So every white region lies inside the black body and every yellow region
 lies inside a white region.
 """
 
@@ -73,8 +73,8 @@ class TuxProfile:
     belly: Sketch  # white
     eyes: Sketch  # white
     pupils: Sketch  # holes in the white (the black body shows through)
-    beak: Sketch  # orange (on a white pad of the same shape)
-    feet: Sketch  # orange (on a white pad of the same shape)
+    beak: Sketch  # yellow (on a white pad of the same shape)
+    feet: Sketch  # yellow (on a white pad of the same shape)
 
     @cached_property
     def white(self) -> Sketch:
@@ -82,7 +82,7 @@ class TuxProfile:
         return close_crevices(self.belly + self.eyes + self.beak + self.feet) - self.pupils
 
     @cached_property
-    def orange(self) -> Sketch:
+    def yellow(self) -> Sketch:
         return close_crevices(self.beak + self.feet)
 
 

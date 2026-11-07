@@ -1,6 +1,6 @@
 """Export Tux Vise: STL files (out/stl/tux_vise) and 3MF plates (out/3mf/tux_vise).
 
-Only Tux changes colour: white at layer_top(Z_WHITE) and orange at layer_top(Z_ORANGE),
+Only Tux changes colour: white at layer_top(Z_WHITE) and yellow at layer_top(Z_ORANGE),
 already set in his 3MF. Every other plate prints in one colour.
 
 Exits with status 1 if any part fails a check.
@@ -33,7 +33,7 @@ from .model import (
 
 MODEL = "tux_vise"
 M600_WHITE, M600_ORANGE = P.M600_WHITE, P.M600_ORANGE  # defined in params.py
-CHANGES: list[Change] = [(M600_WHITE, "white"), (M600_ORANGE, "orange")]
+CHANGES: list[Change] = [(M600_WHITE, "white"), (M600_ORANGE, "yellow")]
 
 # Declared widths, checked by the tests: thin features must be whole lines (2 or more),
 # gaps at least one line. The vise has no thin walls; its narrowest holes are these.
@@ -46,9 +46,9 @@ GAPS = {"gnu eyes and nostrils": P.lines(4),
 # Suggested colours. Tux has three (M600); every other plate prints in one colour, so the
 # parts that share a plate share a colour.
 COLOUR = {"tux_vise_tux": "black", "tux_vise_base": "blue", "tux_vise_jaw": "black",
-          "tux_vise_fork": "black", "tux_vise_nut": "black", "tux_vise_screw": "orange",
+          "tux_vise_fork": "black", "tux_vise_nut": "black", "tux_vise_screw": "yellow",
           "tux_vise_foot": "blue", "tux_vise_foot_screw": "blue", "tux_vise_foot_nut": "blue",
-          "coupon_thread_gauge": "orange", "coupon_thread_stub": "orange"}
+          "coupon_thread_gauge": "yellow", "coupon_thread_stub": "yellow"}
 
 
 def _thread_zone(r: float, z0: float, z1: float, x: float = 0.0, y: float = 0.0):
@@ -138,7 +138,7 @@ def plates() -> Plates:
 def export_all(out: Path) -> dict[str, list[str]]:
     report = export_model(out, MODEL, printable_parts(), plates())
     print(f"\nColour changes (M600, 0.2 mm layers): Tux only, white at Z = {M600_WHITE:.2f} mm, "
-          f"orange at Z = {M600_ORANGE:.2f} mm. The 3MF plate already has them.")
+          f"yellow at Z = {M600_ORANGE:.2f} mm. The 3MF plate already has them.")
     return report
 
 

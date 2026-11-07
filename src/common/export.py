@@ -16,7 +16,8 @@ from build123d import Color, Mesher, Part, Pos, export_stl
 BED = (250.0, 210.0, 220.0)  # Prusa MK4
 BED_CENTRE = (BED[0] / 2, BED[1] / 2)  # PrusaSlicer arranges around the middle of the bed
 STL_TOLERANCE = (0.01, 0.1)  # linear (mm), angular (rad)
-COLOURS = {"black": "#1c1a1e", "orange": "#f07318", "white": "#ece8dc", "grey": "#4a494e",
+# preview colours; "yellow" is Prusament PETG Yellow Gold (an approximation)
+COLOURS = {"black": "#1c1a1e", "yellow": "#f4b41a", "white": "#ece8dc", "grey": "#4a494e",
            "blue": "#3a73b3"}
 M600_ENTRY = "Metadata/Prusa_Slicer_custom_gcode_per_print_z.xml"
 MAX_CHANGES = 3  # colour changes per plate

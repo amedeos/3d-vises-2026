@@ -1,7 +1,7 @@
 """Export Tux Clip: STL files (out/stl/tux_clip) and 3MF plates (out/3mf/tux_clip).
 
 Every clip plate has two colour changes, already set in the 3MF: white at
-layer_top(Z_WHITE) and orange at layer_top(Z_ORANGE). The coupon has none.
+layer_top(Z_WHITE) and yellow at layer_top(Z_ORANGE). The coupon has none.
 
 Exits with status 1 if any part fails a check.
 """
@@ -27,7 +27,7 @@ from .model import (
 
 MODEL = "tux_clip"
 M600_WHITE, M600_ORANGE = P.M600_WHITE, P.M600_ORANGE  # defined in params.py
-CHANGES: list[Change] = [(M600_WHITE, "white"), (M600_ORANGE, "orange")]
+CHANGES: list[Change] = [(M600_WHITE, "white"), (M600_ORANGE, "yellow")]
 
 # Declared widths, checked by the tests: thin features must be whole lines (2 or more),
 # gaps at least one line.
@@ -82,7 +82,7 @@ def plates() -> Plates:
 def export_all(out: Path) -> dict[str, list[str]]:
     report = export_model(out, MODEL, printable_parts(), plates())
     print(f"\nColour changes (M600, 0.2 mm layers): white at Z = {M600_WHITE:.2f} mm, "
-          f"orange at Z = {M600_ORANGE:.2f} mm. The 3MF plates already have them.")
+          f"yellow at Z = {M600_ORANGE:.2f} mm. The 3MF plates already have them.")
     return report
 
 

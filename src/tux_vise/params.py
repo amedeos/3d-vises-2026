@@ -4,7 +4,7 @@ Assembly frame ("use"): x runs along the screw, from Tux (x = 0 side) to the gnu
 y across; z up; the bottom of the base on z = 0.
 
 - Tux (the fixed jaw) stands at the x = 0 end, his belly facing +x. He prints on his back
-  with black, white and orange (two M600), like the clip, and plugs into the base.
+  with black, white and yellow (two M600), like the clip, and plugs into the base.
 - The base carries a dovetail rail along x and, at the far end, the end block with the
   nut pocket.
 - The moving jaw is a flipper. It slides on the rail; its face is the clamping face.
@@ -27,9 +27,9 @@ from common.grid import FIRST_LAYER, LAYER, LINE_W, layer_top, layers, lines, sn
 TUX_H = 64.0  # Tux height, feet to head
 T_TUX = layers(30)  # 6.0 mm black plate
 T_WHITE = layers(3)  # 0.6 mm white: the belly is the face of the fixed jaw
-T_ORANGE = layers(2)  # 0.4 mm orange: beak and feet stand this far proud of the belly
+T_ORANGE = layers(2)  # 0.4 mm yellow: beak and feet stand this far proud of the belly
 Z_WHITE = T_TUX  # colour boundary black -> white (print pose)
-Z_ORANGE = T_TUX + T_WHITE  # colour boundary white -> orange
+Z_ORANGE = T_TUX + T_WHITE  # colour boundary white -> yellow
 # M600 heights (print_z of the first layer of the new colour). Only Tux changes colour.
 M600_WHITE = layer_top(Z_WHITE)
 M600_ORANGE = layer_top(Z_ORANGE)

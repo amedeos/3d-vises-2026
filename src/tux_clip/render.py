@@ -56,13 +56,13 @@ def listing(out: Path, with_gifs: bool = False) -> None:
     for name, theta in [("rest", 0.0), ("open", m.theta_stop * 0.35)]:
         render(clip_items("M", theta), out / f"clip_jaw_{name}.png", elev=60, azim=-60,
                zoom=4.0, target=target, size=(700, 600))
-    render([(make_coupon(), "orange")], out / "coupon_flexure.png", elev=55, azim=-80,
+    render([(make_coupon(), "yellow")], out / "coupon_flexure.png", elev=55, azim=-80,
            zoom=1.2, size=(900, 600))
     if with_gifs:
         frames = [m.theta_stop * sin(k / 14 * pi / 2) ** 2 for k in range(15)]
         gif((clip_items("M", t) for t in frames), out / "clip_M_squeeze.gif", duration=70,
             **FRONT, zoom=1.15, size=(520, 520))
-        coupon = [(extrude(coupon_profile(k / 10), P.T_BODY, dir=(0, 0, 1)), "orange")
+        coupon = [(extrude(coupon_profile(k / 10), P.T_BODY, dir=(0, 0, 1)), "yellow")
                   for k in range(11)]
         gif(([c] for c in coupon), out / "coupon_flexure.gif", duration=90, **FRONT, zoom=1.2,
             size=(560, 420))

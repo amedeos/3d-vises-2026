@@ -2,7 +2,7 @@
 
 Print poses (each part rests on z = 0):
 
-- Tux: on his back, like the clip. Black plate, white and orange reliefs on top.
+- Tux: on his back, like the clip. Black plate, white and yellow reliefs on top.
 - base: upright, as used.
 - jaw: upright, as used, shifted down by JAW_Z0.
 - fork: flat.
@@ -83,14 +83,14 @@ def tux_colours() -> tuple[tuple[Part, str], ...]:
     filled = close_crevices(tux.body + tenon) & (Pos(0, 50) * Rectangle(200, 100))
     black = extrude(filled + tenon, P.T_TUX, dir=(0, 0, 1))
     white = Pos(0, 0, P.Z_WHITE) * extrude(tux.white, P.T_WHITE, dir=(0, 0, 1))
-    orange = Pos(0, 0, P.Z_ORANGE) * extrude(tux.orange, P.T_ORANGE, dir=(0, 0, 1))
-    return ((black, "black"), (white, "white"), (orange, "orange"))
+    yellow = Pos(0, 0, P.Z_ORANGE) * extrude(tux.yellow, P.T_ORANGE, dir=(0, 0, 1))
+    return ((black, "black"), (white, "white"), (yellow, "yellow"))
 
 
 @cache
 def make_tux() -> Part:
-    black, white, orange = (p for p, _ in tux_colours())
-    tux = black + white + orange
+    black, white, yellow = (p for p, _ in tux_colours())
+    tux = black + white + yellow
     tux.label = "tux_vise_tux"
     return tux
 

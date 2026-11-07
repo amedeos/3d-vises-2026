@@ -23,7 +23,7 @@ Both models share one code base.
 - **Slicer profile:** PrusaSlicer "Original Prusa MK4 Input Shaper 0.4 nozzle",
   "0.20mm STRUCTURAL @MK4IS 0.4", "Prusament PETG @PGIS". 0.2 mm layers (first layer too),
   0.45 mm lines. Textured sheet.
-- **Material:** Prusament PETG (black, white, orange).
+- **Material:** Prusament PETG (black, white, Yellow Gold). In the code the colour is `"yellow"`.
 - **License:** CC BY-SA 4.0. Tux by Larry Ewing (lewing@isc.tamu.edu), made with GIMP.
   Any bundled font must be under the SIL OFL.
 
@@ -79,7 +79,7 @@ uv run python -m tux_vise.render           # out/render/tux_vise (add --gif)
 ## Tux Clip mechanism (do not break it)
 
 - The clip prints **on its back**. Everything is 2.5D: one black profile extruded to
-  `T_BODY`, white and orange reliefs on top. Never add a feature that needs a different
+  `T_BODY`, white and yellow reliefs on top. Never add a feature that needs a different
   height inside the black body.
 - Each flipper is a lever on a leaf flexure (`FLEX_LINES` lines wide). The mechanism lives
   in a local frame (a, b): a runs down the jaw line, b points away from the body, the

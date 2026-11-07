@@ -40,7 +40,7 @@ It holds a business card or a 10 × 15 cm photo. **It cannot hold a phone**: a p
 
 ### Printing
 
-Prusa MK4 (Input Shaper firmware), **Prusament PETG**, 0.4 mm nozzle, **0.20mm STRUCTURAL** profile, **no supports**. PrusaSlicer confirms this: even with automatic supports turned on, it does not generate any. Use the textured or satin sheet: PETG sticks too much to the smooth PEI sheet.
+Prusa MK4 (Input Shaper firmware), **Prusament PETG**, 0.4 mm nozzle, **0.20mm STRUCTURAL** profile, **no supports**. PrusaSlicer confirms this: even with automatic supports turned on, it does not generate any. Use the textured or satin sheet: PETG sticks too much to the smooth PEI sheet. Our colours are black, white and Yellow Gold (Prusament PETG); any three colours work.
 
 There are three kinds of files. Use whichever you like:
 
@@ -50,23 +50,23 @@ There are three kinds of files. Use whichever you like:
 
 | Plate (3MF) | Parts | Colours | Time* | Filament* |
 |---|---|---|---|---|
-| `tux_clip_S` | clip S | black, white, orange | 16 min | 5 g |
-| `tux_clip_M` | clip M | black, white, orange | 24 min | 8 g |
-| `tux_clip_L` | clip L | black, white, orange | 29 min | 11 g |
-| `tux_clip_all_sizes` | S, M and L | black, white, orange | 1 h 09 min | 25 g |
-| `tux_clip_desk` | desk version | black, white, orange | 36 min | 14 g |
+| `tux_clip_S` | clip S | black, white, yellow | 16 min | 5 g |
+| `tux_clip_M` | clip M | black, white, yellow | 24 min | 8 g |
+| `tux_clip_L` | clip L | black, white, yellow | 29 min | 11 g |
+| `tux_clip_all_sizes` | S, M and L | black, white, yellow | 1 h 09 min | 25 g |
+| `tux_clip_desk` | desk version | black, white, yellow | 36 min | 14 g |
 | `coupon_flexure` | flexure coupon | any, no colour change | 16 min | 4 g |
 
 \* PrusaSlicer 2.9.6 estimates (Prusament PETG, 0.20mm STRUCTURAL). The desk version is over the 30 minute target of the clips, because of the floe.
 
 ### Colour changes (M600)
 
-Every clip prints black first, then the belly and eyes in white, then the beak and feet in orange. Each colour is a flat layer on top of the one before, so two colour changes are enough:
+Every clip prints black first, then the belly and eyes in white, then the beak and feet in yellow. Each colour is a flat layer on top of the one before, so two colour changes are enough:
 
 | Part | Z (print_z) | From | To | What changes colour |
 |---|---|---|---|---|
 | all clips and the desk version | 5.00 mm | black | white | belly, eyes (pupils stay black) |
-| all clips and the desk version | 5.60 mm | white | orange | beak and feet |
+| all clips and the desk version | 5.60 mm | white | yellow | beak and feet |
 | flexure coupon | — | — | — | no colour change |
 
 The 3MF files already contain them. With the STL files, add them yourself: open the preview, move the vertical slider to the layer and click the **+**.
@@ -77,7 +77,7 @@ The 3MF files already contain them. With the STL files, add them yourself: open 
 
 The model follows the slicer grid, so nothing gets rounded away:
 
-- **Layers.** Lying on its back, every flat surface sits on a layer boundary: the black body is 4.8 mm (24 layers), the white and orange reliefs 0.6 mm (3 layers) each.
+- **Layers.** Lying on its back, every flat surface sits on a layer boundary: the black body is 4.8 mm (24 layers), the white and yellow reliefs 0.6 mm (3 layers) each.
 - **Colour boundaries** are flat layers too, at 4.8 and 5.4 mm. The M600 goes before the first layer of the new colour (Z = 5.00 and 5.60 mm). PrusaSlicer's G-code confirms both.
 - **Lines.** The leaf and the comb teeth are exactly 2 lines wide (0.86 mm). Every slot, gap and hole is at least one line wide (0.5 mm), so nothing fuses during the print.
 - **No islands.** Every layer rests on the layer below, and there are no overhangs at all.
@@ -116,7 +116,7 @@ Everything is printed, the thread too: no screws, no nuts, no springs. The jaw o
 
 ### How it works
 
-- **Tux** stands in a slot at one end of the base, his back against a backstop. His white belly is the face of the fixed jaw. He prints on his back in black, white and orange, like the clip.
+- **Tux** stands in a slot at one end of the base, his back against a backstop. His white belly is the face of the fixed jaw. He prints on his back in black, white and yellow, like the clip.
 - **The flipper** (the moving jaw) slides on a dovetail rail along the base, so it cannot tip or lift.
 - **The screw** goes through a square nut that sits in the end block. Its head sits in a small chamber inside the flipper, and a **fork** dropped into the top of the flipper keeps it there. Turn the gnu clockwise and the tip of the screw pushes the flipper towards Tux. Turn it back and the head pulls the flipper open.
 - **Stops.** Fully open, the flipper stops against the end block. Closed, it stops on Tux's belly. The flipper can only leave the rail at Tux's end, and Tux is in the way.
@@ -129,7 +129,7 @@ Everything is printed, the thread too: no screws, no nuts, no springs. The jaw o
 
 `uv run python -m tux_vise.kinematics` prints the full table, with the thread engagement.
 
-The beak and the feet stand 0.4 mm proud of the belly (they are the orange layers on top). The flipper stops below the beak and steps back over the feet, so it always clamps on the white belly.
+The beak and the feet stand 0.4 mm proud of the belly (they are the yellow layers on top). The flipper stops below the beak and steps back over the feet, so it always clamps on the white belly.
 
 
 ### Printing
@@ -138,10 +138,10 @@ Same printer and profile as the clip: Prusa MK4, **Prusament PETG**, 0.4 mm nozz
 
 | Plate (3MF) | Parts | Colours | Time* | Filament* |
 |---|---|---|---|---|
-| `tux_vise_tux` | Tux | black, white, orange | 19 min | 8 g |
+| `tux_vise_tux` | Tux | black, white, yellow | 19 min | 8 g |
 | `tux_vise_base` | base | one colour (blue: ice) | 1 h 03 min | 23 g |
 | `tux_vise_jaw` | flipper, fork, nut | one colour (black) | 50 min | 13 g |
-| `tux_vise_screw` | screw with the gnu | one colour (orange) | 1 h 03 min | 8 g |
+| `tux_vise_screw` | screw with the gnu | one colour (yellow) | 1 h 03 min | 8 g |
 | `tux_vise_parts_one_colour` | base, flipper, fork, nut, screw | one colour | 2 h 37 min | 43 g |
 | `tux_vise_foot` | desk foot, foot screw, foot nut | one colour | 1 h 37 min | 26 g |
 | `coupon_thread` | thread coupon | one colour | 56 min | 14 g |
@@ -153,7 +153,7 @@ Same printer and profile as the clip: Prusa MK4, **Prusament PETG**, 0.4 mm nozz
 | Part | Z (print_z) | From | To | What changes colour |
 |---|---|---|---|---|
 | Tux | 6.20 mm | black | white | belly and eyes (pupils stay black) |
-| Tux | 6.80 mm | white | orange | beak and feet |
+| Tux | 6.80 mm | white | yellow | beak and feet |
 | every other part | — | — | — | no colour change |
 
 Tux in one colour still looks like Tux: his belly, eyes, beak and feet are raised, and the pupils are holes.

@@ -80,8 +80,8 @@ def test_3mf_content(tmp_path, model, plate):
 def test_too_many_colour_changes_are_refused(tmp_path):
     objects, _ = next(iter(plates("tux_clip").values()))
     with pytest.raises(ValueError):
-        write_3mf(tmp_path / "x.3mf", objects, [(1.0, "white"), (2.0, "orange"),
-                                                (3.0, "white"), (4.0, "orange")])
+        write_3mf(tmp_path / "x.3mf", objects, [(1.0, "white"), (2.0, "yellow"),
+                                                (3.0, "white"), (4.0, "yellow")])
 
 
 def test_project_gets_the_config_from_the_gcode(tmp_path):

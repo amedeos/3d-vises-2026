@@ -106,7 +106,7 @@ def listing(out: Path, with_gifs: bool = False) -> None:
            size=(1000, 800))
     pp = printable_parts()
     coupon = row([pp["coupon_thread_gauge"], pp["coupon_thread_stub"]], gap=10.0)
-    render([(p, "orange") for p in coupon], out / "coupon_thread.png", elev=50, azim=-70,
+    render([(p, "yellow") for p in coupon], out / "coupon_thread.png", elev=50, azim=-70,
            zoom=1.2, size=(900, 600))
     if with_gifs:
         steps = 18
