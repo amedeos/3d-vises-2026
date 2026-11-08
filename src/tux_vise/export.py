@@ -48,7 +48,7 @@ GAPS = {"gnu eyes and nostrils": P.lines(4),
 # parts that share a plate share a colour.
 COLOUR = {"tux_vise_tux": "black", "tux_vise_base": "white", "tux_vise_ice": "white",
           "tux_vise_jaw": "black", "tux_vise_fork": "black", "tux_vise_nut": "black",
-          "tux_vise_screw": "yellow", "tux_vise_foot": "white", "tux_vise_foot_screw": "white",
+          "tux_vise_screw": "yellow", "tux_vise_foot": "white", "tux_vise_foot_screw": "yellow",
           "tux_vise_foot_nut": "white",
           "coupon_thread_gauge": "yellow", "coupon_thread_stub": "yellow"}
 
@@ -132,8 +132,9 @@ def plates() -> Plates:
         "tux_vise_screw": (plate(["tux_vise_screw"]), []),
         # everything but Tux on one plate, in one colour: faster than the three plates
         "tux_vise_parts_one_colour": (plate(one_colour, "black"), []),
-        "tux_vise_foot": (plate(["tux_vise_foot", "tux_vise_foot_screw", "tux_vise_foot_nut"],
-                                "white"), []),
+        "tux_vise_foot": (plate(["tux_vise_foot", "tux_vise_foot_nut"]), []),
+        # its own plate: the gnu knob is yellow, like the vise screw
+        "tux_vise_foot_screw": (plate(["tux_vise_foot_screw"]), []),
         "coupon_thread": (plate(["coupon_thread_gauge", "coupon_thread_stub"]), []),
     }
 

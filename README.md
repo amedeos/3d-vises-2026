@@ -154,7 +154,8 @@ Same printer and profile as the clip: Prusa MK4, **Prusament PETG**, 0.4 mm nozz
 | `tux_vise_jaw` | flipper, fork, nut | one colour (black) | 50 min | 13 g |
 | `tux_vise_screw` | screw with the gnu | one colour (yellow) | 1 h 03 min | 8 g |
 | `tux_vise_parts_one_colour` | base, ice block, flipper, fork, nut, screw | one colour | 2 h 58 min | 49 g |
-| `tux_vise_foot` | desk foot, foot screw, foot nut | one colour | 1 h 37 min | 26 g |
+| `tux_vise_foot` | desk foot, foot nut | one colour (white, like the base) | 1 h 07 min | 21 g |
+| `tux_vise_foot_screw` | foot screw with the gnu | one colour (yellow, like the vise screw) | 42 min | 5 g |
 | `coupon_thread` | thread coupon | one colour | 56 min | 14 g |
 
 \* PrusaSlicer 2.9.6 estimates (Prusament PETG, 0.20mm STRUCTURAL). The screw is light but slow: it is tall and thin, so the slicer slows down to give each small layer time to cool. If you print everything except Tux in one colour, `tux_vise_parts_one_colour` saves about 20 minutes over the three separate plates.
