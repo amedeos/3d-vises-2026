@@ -121,6 +121,8 @@ Squeeze each flipper and feel the difference. A thicker leaf grips harder but op
 
 A small desk vise, 98 mm long. **Tux is the fixed jaw: you clamp things against his belly.** His flipper is the moving jaw, and you turn a gnu to drive it: GNU/Linux, the gnu moves Tux. It holds a circuit board while you solder, a small part while you file it, or a phone stand while the glue dries.
 
+**Download it on Printables:** [Tux Vise – GNU/Linux desk vise: the gnu moves Tux](https://www.printables.com/model/1907180-tux-vise-gnulinux-desk-vise-the-gnu-moves-tux)
+
 Everything is printed, the thread too: no screws, no nuts, no springs. The jaw opens from 0 to 35 mm, 3 mm per turn of the gnu.
 
 ![A printed Tux Vise on its desk foot, clamped to the edge of a wooden desk: white base, black flipper, Tux at the far end, yellow screw and gnu knob](docs/photos/tux_vise_desk.jpg)
