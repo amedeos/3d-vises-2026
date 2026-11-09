@@ -123,6 +123,18 @@ A small desk vise, 98 mm long. **Tux is the fixed jaw: you clamp things against 
 
 Everything is printed, the thread too: no screws, no nuts, no springs. The jaw opens from 0 to 35 mm, 3 mm per turn of the gnu.
 
+![A printed Tux Vise on its desk foot, clamped to the edge of a wooden desk: white base, black flipper, Tux at the far end, yellow screw and gnu knob](docs/photos/tux_vise_desk.jpg)
+
+*Tux Vise on the optional desk foot, clamped to the edge of a desk. Printed on a Prusa MK4 in Prusament PETG (black, white and Yellow Gold).*
+
+![The printed Tux Vise seen from the knob's end: the yellow gnu head in front, the screw going into the white end block, the black flipper and Tux behind](docs/photos/tux_vise_gnu.jpg)
+
+*Seen from the gnu's end: the gnu turns the screw, and the screw moves Tux's flipper. GNU/Linux.*
+
+![A printed Tux Vise on the textured sheet of a Prusa MK4, jaw half open](docs/photos/tux_vise.jpg)
+
+*The vise on its own, straight off the printer: Tux at the far end, the flipper on the rail, the gnu knob on the left.*
+
 
 ### How it works
 
@@ -159,6 +171,18 @@ Same printer and profile as the clip: Prusa MK4, **Prusament PETG**, 0.4 mm nozz
 | `coupon_thread` | thread coupon | one colour | 56 min | 14 g |
 
 \* PrusaSlicer 2.9.6 estimates (Prusament PETG, 0.20mm STRUCTURAL). The screw is light but slow: it is tall and thin, so the slicer slows down to give each small layer time to cool. If you print everything except Tux in one colour, `tux_vise_parts_one_colour` saves about 20 minutes over the three separate plates.
+
+Our printed parts, one photo per plate (Prusa MK4, Prusament PETG):
+
+| `tux_vise_tux` | `tux_vise_base` | `tux_vise_jaw` |
+|---|---|---|
+| <img src="docs/photos/tux_vise_tux.jpg" width="260" alt="The printed Tux, lying flat: black body, white belly and eyes, yellow beak and feet, and the black tab at his feet that plugs into the base"> | <img src="docs/photos/tux_vise_base.jpg" width="260" alt="The printed base in white, with the backstop, the two slots, the rail and the end block, next to the ice block"> | <img src="docs/photos/tux_vise_jaw.jpg" width="260" alt="The printed flipper, fork and square nut in black"> |
+| Tux, the only part that changes colour | base and ice block | flipper, fork and nut |
+
+| `tux_vise_screw` | `tux_vise_foot_screw` | `tux_vise_foot` |
+|---|---|---|
+| <img src="docs/photos/tux_vise_screw.jpg" width="260" alt="The printed vise screw in yellow, standing on its gnu knob as printed, with the head and the thin neck on top"> | <img src="docs/photos/tux_vise_foot_screw.jpg" width="260" alt="The printed foot screw in yellow, standing on its gnu knob: the gnu's head and horns seen from the front"> | <img src="docs/photos/tux_vise_foot.jpg" width="260" alt="The printed desk foot in white, next to the foot nut"> |
+| vise screw, on its gnu knob | foot screw, the same gnu | desk foot and foot nut |
 
 **Colour changes (M600).** Only Tux changes colour. His 3MF already has both changes:
 
